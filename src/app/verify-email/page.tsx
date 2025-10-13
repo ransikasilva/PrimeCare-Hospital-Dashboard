@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Mail, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { apiClient } from "@/lib/api";
 
-export default function EmailVerificationPage() {
+function EmailVerificationContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const userType = searchParams.get('type') || 'hospital';
@@ -248,5 +248,20 @@ export default function EmailVerificationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function EmailVerificationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Clock className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <EmailVerificationContent />
+    </Suspense>
   );
 }
