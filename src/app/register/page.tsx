@@ -239,48 +239,6 @@ export default function RegisterPage() {
                 </button>
               </Link>
             </div>
-
-            {/* Other Registration Options */}
-            <div className="mt-20 pt-12 border-t border-gray-200">
-              <h3 
-                className="text-center font-semibold mb-10"
-                style={{ 
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  color: '#2C3E50'
-                }}
-              >
-                Other Registration Options
-              </h3>
-              <div className="flex justify-center space-x-8">
-                <Link href="/register/collection-center">
-                  <button 
-                    className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: '2px solid #E5E7EB',
-                      color: '#2C3E50',
-                      fontSize: '16px'
-                    }}
-                  >
-                    Register Collection Center
-                  </button>
-                </Link>
-                <Link href="/register/rider">
-                  <button 
-                    className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
-                    style={{
-                      backgroundColor: 'transparent',
-                      border: '2px solid #E5E7EB',
-                      color: '#2C3E50',
-                      fontSize: '16px'
-                    }}
-                  >
-                    Register as Rider
-                  </button>
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </div>
