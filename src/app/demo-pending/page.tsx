@@ -150,14 +150,14 @@ export default function DemoPendingApprovalPage() {
                 <Phone className="w-5 h-5 text-teal-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">TransFleet Support</p>
-                  <p className="text-sm text-gray-600">+94 11 234 5678</p>
+                  <p className="text-sm text-gray-600">+94 77 788 4049</p>
                 </div>
               </div>
               <div className="flex items-center">
                 <Mail className="w-5 h-5 text-teal-600 mr-3" />
                 <div>
                   <p className="text-sm font-medium text-gray-900">Email Support</p>
-                  <p className="text-sm text-gray-600">support@primecare.lk</p>
+                  <p className="text-sm text-gray-600">transfleet.primecare@gmail.com</p>
                 </div>
               </div>
             </div>
