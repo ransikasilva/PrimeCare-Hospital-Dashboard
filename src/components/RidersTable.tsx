@@ -100,7 +100,7 @@ export function RidersTable() {
     setProcessingIds(prev => new Set(prev).add(riderId));
     
     try {
-      const response = await fetch(`http://localhost:3000/api/approvals/reject/rider/${riderId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/approvals/reject/rider/${riderId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
