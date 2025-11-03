@@ -159,9 +159,19 @@ export function OrdersTable() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getSampleTypeColor(order.sample_type || 'N/A')}`}>
-                      {order.sample_type || 'N/A'}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {order.samples && order.samples.length > 0 ? (
+                        order.samples.map((sample: any, idx: number) => (
+                          <span key={idx} className={`px-2 py-1 text-xs font-medium rounded-full ${getSampleTypeColor(sample.sample_type)}`}>
+                            {sample.sample_type} ({sample.quantity})
+                          </span>
+                        ))
+                      ) : (
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getSampleTypeColor(order.sample_type || 'N/A')}`}>
+                          {order.sample_type || 'N/A'}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={getRiderColor(order.rider_name)}>
