@@ -139,16 +139,17 @@ export function Sidebar() {
     : baseNavigation;
 
   return (
-    <div 
-      className="w-72 h-screen relative"
+    <div
+      className="w-72 h-screen flex flex-col fixed left-0 top-0"
       style={{
         background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
         borderRight: '1px solid rgba(203, 213, 225, 0.3)',
-        boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+        boxShadow: '4px 0 24px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)',
+        zIndex: 40
       }}
     >
       {/* Header */}
-      <div className="p-4 pb-3 border-b border-gray-100/60">
+      <div className="flex-shrink-0 p-4 pb-3 border-b border-gray-100/60">
         <div className="flex items-center space-x-3">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden bg-white"
@@ -182,7 +183,8 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-3 space-y-2">
+      <nav className="flex-1 overflow-y-auto px-4 py-3 space-y-2"
+           style={{ scrollbarWidth: 'thin', scrollbarColor: '#5DADE2 transparent' }}>
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           const isHovered = hoveredItem === item.name;
@@ -291,7 +293,7 @@ export function Sidebar() {
       </nav>
 
       {/* Quick Actions */}
-      <div className="p-4 border-t border-gray-100/60">
+      <div className="flex-shrink-0 p-4 border-t border-gray-100/60">
         <div className="mb-4">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Quick Actions

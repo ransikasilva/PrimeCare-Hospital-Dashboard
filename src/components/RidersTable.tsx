@@ -233,7 +233,15 @@ export function RidersTable() {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+          <colgroup>
+            <col style={{ width: '25%' }} />
+            <col style={{ width: '15%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '12%' }} />
+            <col style={{ width: '24%' }} />
+          </colgroup>
           <thead className="bg-gradient-to-r from-indigo-50 to-purple-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

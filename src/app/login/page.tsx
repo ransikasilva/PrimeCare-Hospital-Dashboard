@@ -7,8 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: "ransikasilva03.22@gmail.com", // Pre-filled for testing
-    password: "TransFleetTest@2024" // Pre-filled for testing
+    email: "",
+    password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const { login, error, clearError } = useAuth();
@@ -32,8 +32,20 @@ export default function LoginPage() {
 
       // Login successful, check if user needs approval
       const user = loginResponse.data?.user;
+      const billingStatus = loginResponse.data?.billing_status;
 
       if (user?.user_type === 'hospital') {
+        // Check if services are suspended
+        if (billingStatus && (!billingStatus.services_active || billingStatus.subscription_status === 'Suspended')) {
+          sessionStorage.setItem('suspension_data', JSON.stringify({
+            network_name: billingStatus.network_name,
+            contact_email: 'transfleet.primecare@gmail.com',
+            contact_phone: '+94 77 788 4049'
+          }));
+          router.push('/service-suspended');
+          return;
+        }
+
         // For hospital users, check their hospital/network status
         try {
           const { apiClient } = await import('@/lib/api');
@@ -86,8 +98,19 @@ export default function LoginPage() {
         // Non-hospital users go directly to dashboard
         router.push("/dashboard");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
+
+      // Check if service is suspended
+      if (error?.response?.data?.error?.code === 'SERVICE_SUSPENDED') {
+        const suspensionData = error.response.data.error.data;
+        // Store suspension data in session storage
+        sessionStorage.setItem('suspension_data', JSON.stringify(suspensionData));
+        // Redirect to suspension page
+        router.push('/service-suspended');
+        return;
+      }
+
       // Error is handled by the auth hook
     } finally {
       setIsLoading(false);

@@ -53,7 +53,7 @@ interface Alert {
 const quickActions = [
   {
     icon: Building2,
-    title: 'Register Center',
+    title: 'Manage Centers',
     description: 'Add new collection center',
     link: '/centers',
     gradient: ['#5DADE2', '#4A9BC7'],
@@ -61,7 +61,7 @@ const quickActions = [
   },
   {
     icon: FileText,
-    title: 'Create Order',
+    title: 'Manage Orders',
     description: 'Manual order entry',
     link: '/orders',
     gradient: ['#5DADE2', '#6BB6E8'],
@@ -93,9 +93,17 @@ export default function DashboardPage() {
   const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
   const { data: pendingData } = usePendingApprovals(hospitalId || '');
   
-  // Extract collection centers and alerts from real data
-  const collectionCenters = (dashboardData?.data as any)?.collection_centers || [];
-  const alerts = (dashboardData?.data as any)?.alerts || [];
+  // Extract collection centers and alerts from real data, remove duplicates by ID
+  const collectionCentersRaw = (dashboardData?.data as any)?.collection_centers || [];
+  const alertsRaw = (dashboardData?.data as any)?.alerts || [];
+
+  // Remove duplicates based on ID
+  const collectionCenters = collectionCentersRaw.filter((center: any, index: number, self: any[]) =>
+    index === self.findIndex((c: any) => c.id === center.id)
+  );
+  const alerts = alertsRaw.filter((alert: any, index: number, self: any[]) =>
+    index === self.findIndex((a: any) => a.id === alert.id)
+  );
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -345,27 +353,6 @@ export default function DashboardPage() {
                             <div className="text-center">
                               <div className="text-sm text-gray-600">{center.last_pickup || 'N/A'}</div>
                               <div className="text-xs text-gray-500 uppercase tracking-wider">Last Pickup</div>
-                            </div>
-
-                            <div 
-                              className="flex items-center space-x-2 px-4 py-2 rounded-full border"
-                              style={{
-                                background: statusConfig.bg,
-                                borderColor: statusConfig.border
-                              }}
-                            >
-                              {statusConfig.pulse && (
-                                <div 
-                                  className="w-2 h-2 rounded-full animate-pulse"
-                                  style={{ backgroundColor: statusConfig.border }}
-                                />
-                              )}
-                              <span 
-                                className="text-sm font-bold"
-                                style={{ color: statusConfig.color }}
-                              >
-                                {statusConfig.text}
-                              </span>
                             </div>
                           </div>
                         </div>
