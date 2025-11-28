@@ -105,13 +105,37 @@ export function OrderTrackingMap({
   useEffect(() => {
     if (!map || !window.google) return;
 
+    // Helper function to validate coordinates
+    const isValidCoordinate = (lat: any, lng: any): boolean => {
+      return (
+        typeof lat === 'number' &&
+        typeof lng === 'number' &&
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        isFinite(lat) &&
+        isFinite(lng) &&
+        lat !== 0 &&
+        lng !== 0
+      );
+    };
+
     // Clear existing markers and polylines
     // (store them in map.data or separate refs if needed)
 
     const bounds = new window.google.maps.LatLngBounds();
+    const directionsService = new window.google.maps.DirectionsService();
+    const directionsRenderer = new window.google.maps.DirectionsRenderer({
+      map: map,
+      suppressMarkers: true, // We'll add our own custom markers
+      polylineOptions: {
+        strokeColor: '#EF4444', // Red color for the route
+        strokeOpacity: 0.8,
+        strokeWeight: 5,
+      }
+    });
 
     // Add pickup marker
-    if (pickupLocation) {
+    if (pickupLocation && isValidCoordinate(pickupLocation.lat, pickupLocation.lng)) {
       new window.google.maps.Marker({
         position: { lat: pickupLocation.lat, lng: pickupLocation.lng },
         map: map,
@@ -129,7 +153,7 @@ export function OrderTrackingMap({
     }
 
     // Add delivery marker
-    if (deliveryLocation) {
+    if (deliveryLocation && isValidCoordinate(deliveryLocation.lat, deliveryLocation.lng)) {
       new window.google.maps.Marker({
         position: { lat: deliveryLocation.lat, lng: deliveryLocation.lng },
         map: map,
@@ -147,7 +171,7 @@ export function OrderTrackingMap({
     }
 
     // Add handover marker if exists
-    if (handoverLocation) {
+    if (handoverLocation && isValidCoordinate(handoverLocation.lat, handoverLocation.lng)) {
       new window.google.maps.Marker({
         position: { lat: handoverLocation.lat, lng: handoverLocation.lng },
         map: map,
@@ -166,42 +190,49 @@ export function OrderTrackingMap({
 
     // Draw route polyline from location points
     if (locationPoints && locationPoints.length > 0) {
-      const path = locationPoints.map(point => ({
-        lat: point.location_lat,
-        lng: point.location_lng,
-      }));
+      // Filter valid points only
+      const validPoints = locationPoints.filter(point =>
+        isValidCoordinate(point.location_lat, point.location_lng)
+      );
 
-      new window.google.maps.Polyline({
-        path: path,
-        geodesic: true,
-        strokeColor: '#6366F1',
-        strokeOpacity: 0.8,
-        strokeWeight: 4,
-        map: map,
-      });
+      if (validPoints.length > 0) {
+        const path = validPoints.map(point => ({
+          lat: point.location_lat,
+          lng: point.location_lng,
+        }));
 
-      // Add marker for current position (last point)
-      const lastPoint = locationPoints[locationPoints.length - 1];
-      new window.google.maps.Marker({
-        position: { lat: lastPoint.location_lat, lng: lastPoint.location_lng },
-        map: map,
-        icon: {
-          path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-          scale: 6,
-          fillColor: '#6366F1',
-          fillOpacity: 1,
-          strokeColor: '#FFFFFF',
-          strokeWeight: 2,
-          rotation: 0, // You could calculate bearing from last 2 points
-        },
-        title: `Current Position (${new Date(lastPoint.recorded_at).toLocaleTimeString()})`,
-      });
+        new window.google.maps.Polyline({
+          path: path,
+          geodesic: true,
+          strokeColor: '#6366F1',
+          strokeOpacity: 0.8,
+          strokeWeight: 4,
+          map: map,
+        });
 
-      // Extend bounds to include all tracking points
-      locationPoints.forEach(point => {
-        bounds.extend({ lat: point.location_lat, lng: point.location_lng });
-      });
-    } else if (riderLocation && riderLocation.lat !== 0 && riderLocation.lng !== 0) {
+        // Add marker for current position (last valid point)
+        const lastPoint = validPoints[validPoints.length - 1];
+        new window.google.maps.Marker({
+          position: { lat: lastPoint.location_lat, lng: lastPoint.location_lng },
+          map: map,
+          icon: {
+            path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+            scale: 6,
+            fillColor: '#6366F1',
+            fillOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2,
+            rotation: 0, // You could calculate bearing from last 2 points
+          },
+          title: `Current Position (${new Date(lastPoint.recorded_at).toLocaleTimeString()})`,
+        });
+
+        // Extend bounds to include all valid tracking points
+        validPoints.forEach(point => {
+          bounds.extend({ lat: point.location_lat, lng: point.location_lng });
+        });
+      }
+    } else if (riderLocation && isValidCoordinate(riderLocation.lat, riderLocation.lng)) {
       // Show rider's current location if no tracking points available
       new window.google.maps.Marker({
         position: { lat: riderLocation.lat, lng: riderLocation.lng },
@@ -217,6 +248,77 @@ export function OrderTrackingMap({
         title: 'Rider Current Location',
       });
       bounds.extend({ lat: riderLocation.lat, lng: riderLocation.lng });
+    }
+
+    // Fetch and display route from rider's current location to delivery location
+    // First, get valid location points
+    const validPoints = locationPoints?.filter(point =>
+      isValidCoordinate(point.location_lat, point.location_lng)
+    ) || [];
+
+    const currentRiderLocation = validPoints.length > 0
+      ? { lat: validPoints[validPoints.length - 1].location_lat, lng: validPoints[validPoints.length - 1].location_lng }
+      : riderLocation;
+
+    // Only fetch route if we have valid rider location and delivery location
+    if (
+      currentRiderLocation &&
+      deliveryLocation &&
+      isValidCoordinate(currentRiderLocation.lat, currentRiderLocation.lng) &&
+      isValidCoordinate(deliveryLocation.lat, deliveryLocation.lng)
+    ) {
+      const request = {
+        origin: new window.google.maps.LatLng(currentRiderLocation.lat, currentRiderLocation.lng),
+        destination: new window.google.maps.LatLng(deliveryLocation.lat, deliveryLocation.lng),
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      };
+
+      directionsService.route(request, (result: any, status: any) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          directionsRenderer.setDirections(result);
+          console.log('Route rendered successfully from', currentRiderLocation, 'to', deliveryLocation);
+        } else {
+          console.warn('Directions request failed:', status, {
+            from: currentRiderLocation,
+            to: deliveryLocation,
+            reason: status === 'ZERO_RESULTS'
+              ? 'No route found - locations may be unreachable by road or too far apart'
+              : status
+          });
+
+          // Fallback: Draw a straight line if no route is available
+          if (status === 'ZERO_RESULTS' || status === 'NOT_FOUND') {
+            console.log('Drawing straight line fallback between points');
+            new window.google.maps.Polyline({
+              path: [
+                { lat: currentRiderLocation.lat, lng: currentRiderLocation.lng },
+                { lat: deliveryLocation.lat, lng: deliveryLocation.lng }
+              ],
+              geodesic: true,
+              strokeColor: '#F59E0B', // Orange color for fallback line
+              strokeOpacity: 0.6,
+              strokeWeight: 3,
+              map: map,
+              icons: [{
+                icon: {
+                  path: window.google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+                  scale: 2,
+                  strokeColor: '#F59E0B'
+                },
+                offset: '100%',
+                repeat: '50px'
+              }]
+            });
+          }
+        }
+      });
+    } else {
+      console.log('Cannot fetch route - invalid coordinates:', {
+        currentRiderLocation,
+        deliveryLocation,
+        validRider: currentRiderLocation && isValidCoordinate(currentRiderLocation.lat, currentRiderLocation.lng),
+        validDelivery: deliveryLocation && isValidCoordinate(deliveryLocation.lat, deliveryLocation.lng)
+      });
     }
 
     // Fit map to bounds
@@ -269,12 +371,25 @@ export function OrderTrackingMap({
             <span className="text-gray-600">Hospital</span>
           </div>
         )}
-        {locationPoints.length > 0 ? (
+        {locationPoints.length > 0 && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-1 bg-indigo-500"></div>
             <span className="text-gray-600">Rider Path</span>
           </div>
-        ) : riderLocation && (
+        )}
+        {(locationPoints.length > 0 || riderLocation) && deliveryLocation && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-1 bg-red-500"></div>
+              <span className="text-gray-600">Route to Hospital</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-1 bg-orange-500 opacity-60"></div>
+              <span className="text-gray-600 text-xs">Direct Line (fallback)</span>
+            </div>
+          </>
+        )}
+        {riderLocation && !locationPoints.length && (
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
             <span className="text-gray-600">Rider Location</span>

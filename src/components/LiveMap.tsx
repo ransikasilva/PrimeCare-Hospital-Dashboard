@@ -481,26 +481,72 @@ export function LiveMap() {
     // Fit map to show all markers if there are any
     if (newMarkers.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
-      newMarkers.forEach(marker => bounds.extend(marker.getPosition()));
-      
-      // Add padding to bounds
-      map.fitBounds(bounds, {
-        top: 50,
-        right: 50,
-        bottom: 50,
-        left: 50
-      });
-      
-      // Set zoom constraints
-      const listener = window.google.maps.event.addListener(map, 'idle', () => {
-        const currentZoom = map.getZoom();
-        if (currentZoom > 16) {
-          map.setZoom(16);
-        } else if (currentZoom < 8) {
-          map.setZoom(8);
+
+      // Sri Lanka bounds for validation (approximate)
+      const sriLankaBounds = {
+        north: 10.0,
+        south: 5.9,
+        east: 82.0,
+        west: 79.5
+      };
+
+      // Only add markers that are within Sri Lanka to the bounds
+      let validMarkersCount = 0;
+      newMarkers.forEach(marker => {
+        const pos = marker.getPosition();
+        const lat = pos.lat();
+        const lng = pos.lng();
+
+        // Check if marker is within Sri Lanka bounds
+        if (lat >= sriLankaBounds.south && lat <= sriLankaBounds.north &&
+            lng >= sriLankaBounds.west && lng <= sriLankaBounds.east) {
+          bounds.extend(pos);
+          validMarkersCount++;
+        } else {
+          console.log('LiveMap - Marker outside Sri Lanka bounds:', { lat, lng });
         }
-        window.google.maps.event.removeListener(listener);
       });
+
+      if (validMarkersCount > 0) {
+        // Add padding to bounds
+        map.fitBounds(bounds, {
+          top: 50,
+          right: 50,
+          bottom: 50,
+          left: 50
+        });
+
+        // Set zoom constraints
+        const listener = window.google.maps.event.addListener(map, 'idle', () => {
+          const currentZoom = map.getZoom();
+          if (currentZoom > 16) {
+            map.setZoom(16);
+          } else if (currentZoom < 8) {
+            map.setZoom(8);
+          }
+          window.google.maps.event.removeListener(listener);
+        });
+      } else {
+        // All markers are outside Sri Lanka, center on Sri Lanka
+        console.log('LiveMap - All markers outside Sri Lanka, centering on Colombo');
+        map.setCenter({ lat: 6.9271, lng: 79.8612 });
+        map.setZoom(11);
+      }
+
+      // Double-check after a delay to ensure proper centering
+      setTimeout(() => {
+        const currentCenter = map.getCenter();
+        const centerLat = currentCenter.lat();
+        const centerLng = currentCenter.lng();
+
+        // If map center is way outside Sri Lanka, force center to Sri Lanka
+        if (centerLat < sriLankaBounds.south - 5 || centerLat > sriLankaBounds.north + 5 ||
+            centerLng < sriLankaBounds.west - 5 || centerLng > sriLankaBounds.east + 5) {
+          console.log('LiveMap - Map centered outside Sri Lanka, forcing Sri Lanka center');
+          map.setCenter({ lat: 6.9271, lng: 79.8612 });
+          map.setZoom(11);
+        }
+      }, 1000);
     } else {
       // If no markers, center on Colombo with reasonable zoom
       map.setCenter({ lat: 6.9271, lng: 79.8612 });
