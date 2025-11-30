@@ -173,7 +173,7 @@ export default function MainHospitalRegistrationPage() {
             <div className="flex items-center space-x-4">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center bg-white"
-                style={{ boxShadow: '0 4px 16px rgba(93, 173, 226, 0.3)' }}
+                style={{ boxShadow: '0 4px 16px rgba(78, 205, 196, 0.3)' }}
               >
                 <img src="/logo.png" alt="TransFleet Logo" className="w-8 h-8 object-contain" />
               </div>
@@ -639,7 +639,7 @@ export default function MainHospitalRegistrationPage() {
                     disabled={isSubmitting}
                     className="px-12 py-4 rounded-xl font-semibold transition-all duration-200 hover:opacity-90 disabled:opacity-50 shadow-lg"
                     style={{
-                      backgroundColor: '#5DADE2',
+                      backgroundColor: '#4ECDC4',
                       color: '#FFFFFF',
                       fontSize: '16px'
                     }}

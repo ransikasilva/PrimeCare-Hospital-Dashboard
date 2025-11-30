@@ -34,7 +34,7 @@ const getMetricTemplate = () => [
   {
     title: "Active Orders",
     icon: FileText,
-    gradient: ["#5DADE2", "#4A9BC7"],
+    gradient: ["#4ECDC4", "#4A9BC7"],
     type: "number" as const,
     description: "Orders currently in progress",
     key: "active_orders"
@@ -42,7 +42,7 @@ const getMetricTemplate = () => [
   {
     title: "Riders Available",
     icon: Users,
-    gradient: ["#5DADE2", "#6BB6E8"],
+    gradient: ["#4ECDC4", "#6BB6E8"],
     type: "number" as const,
     target: 12,
     description: "Riders ready for assignments",
@@ -51,7 +51,7 @@ const getMetricTemplate = () => [
   {
     title: "Completed Today",
     icon: CheckCircle,
-    gradient: ["#5DADE2", "#4FA5D8"],
+    gradient: ["#4ECDC4", "#4FA5D8"],
     type: "number" as const,
     description: "Successfully delivered orders",
     key: "completed_today"
@@ -60,7 +60,7 @@ const getMetricTemplate = () => [
     title: "SLA Compliance",
     unit: "%",
     icon: TrendingUp,
-    gradient: ["#5DADE2", "#7BBFEA"],
+    gradient: ["#4ECDC4", "#7BBFEA"],
     type: "percentage" as const,
     target: 98,
     description: "On-time delivery performance",

@@ -150,33 +150,33 @@ export default function ServiceSuspendedPage() {
                 border: '1px solid #bfdbfe'
               }}
             >
-              <h3 className="text-lg font-bold text-blue-900 mb-4">📞 Contact Finance Team</h3>
+              <h3 className="text-lg font-bold text-teal-900 mb-4">📞 Contact Finance Team</h3>
               <div className="space-y-3">
                 <a
                   href="tel:+94777884049"
-                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors"
+                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-teal-50 transition-colors"
                   style={{ border: '1px solid #bfdbfe' }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                    <Phone className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <div className="text-sm text-blue-600 font-medium">Phone</div>
-                    <div className="text-blue-900 font-bold">+94 77 788 4049</div>
+                    <div className="text-sm text-teal-600 font-medium">Phone</div>
+                    <div className="text-teal-900 font-bold">+94 77 788 4049</div>
                   </div>
                 </a>
 
                 <a
                   href="mailto:transfleet.primecare@gmail.com"
-                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors"
+                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-teal-50 transition-colors"
                   style={{ border: '1px solid #bfdbfe' }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <div className="text-sm text-blue-600 font-medium">Email</div>
-                    <div className="text-blue-900 font-bold">transfleet.primecare@gmail.com</div>
+                    <div className="text-sm text-teal-600 font-medium">Email</div>
+                    <div className="text-teal-900 font-bold">transfleet.primecare@gmail.com</div>
                   </div>
                 </a>
 
@@ -184,7 +184,7 @@ export default function ServiceSuspendedPage() {
                   href="https://wa.me/94777884049"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-blue-50 transition-colors"
+                  className="flex items-center gap-3 p-4 rounded-xl hover:bg-teal-50 transition-colors"
                   style={{ border: '1px solid #bfdbfe' }}
                 >
                   <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -192,7 +192,7 @@ export default function ServiceSuspendedPage() {
                   </div>
                   <div>
                     <div className="text-sm text-green-600 font-medium">WhatsApp</div>
-                    <div className="text-blue-900 font-bold">+94 77 788 4049</div>
+                    <div className="text-teal-900 font-bold">+94 77 788 4049</div>
                   </div>
                 </a>
 
@@ -200,12 +200,12 @@ export default function ServiceSuspendedPage() {
                   className="flex items-center gap-3 p-4 rounded-xl"
                   style={{ border: '1px solid #bfdbfe', background: 'rgba(239, 246, 255, 0.5)' }}
                 >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-teal-600" />
                   </div>
                   <div>
-                    <div className="text-sm text-blue-600 font-medium">Available</div>
-                    <div className="text-blue-900 font-bold">Monday - Saturday, 8:00 AM - 8:00 PM</div>
+                    <div className="text-sm text-teal-600 font-medium">Available</div>
+                    <div className="text-teal-900 font-bold">Monday - Saturday, 8:00 AM - 8:00 PM</div>
                   </div>
                 </div>
               </div>

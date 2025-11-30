@@ -67,7 +67,7 @@ export default function OrdersPage() {
           <button
             className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90"
             style={{
-              backgroundColor: '#5DADE2',
+              backgroundColor: '#4ECDC4',
               color: '#FFFFFF'
             }}
             onClick={() => {

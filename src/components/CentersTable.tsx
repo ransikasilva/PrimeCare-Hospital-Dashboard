@@ -161,7 +161,7 @@ export function CentersTable() {
       case "pending":
         return "bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm";
       case "pending_hq_approval":
-        return "bg-blue-100 text-blue-800 border border-blue-200 shadow-sm";
+        return "bg-teal-100 text-teal-800 border border-teal-200 shadow-sm";
       case "inactive":
       case "rejected":
         return "bg-gray-100 text-gray-800 border border-gray-200 shadow-sm";
@@ -173,7 +173,7 @@ export function CentersTable() {
   const getTypeColor = (type: string) => {
     switch (type?.toLowerCase()) {
       case "independent":
-        return "bg-blue-100 text-blue-800 border border-blue-200 shadow-sm";
+        return "bg-teal-100 text-teal-800 border border-teal-200 shadow-sm";
       case "dependent":
         return "bg-purple-100 text-purple-800 border border-purple-200 shadow-sm";
       default:
@@ -184,7 +184,7 @@ export function CentersTable() {
   const getCenterNameColor = (centerName: string) => {
     // Different colors for different center types based on name patterns
     if (centerName?.toLowerCase().includes('silva')) {
-      return "text-blue-700 bg-blue-50 px-2 py-1 rounded-md border border-blue-200 font-medium";
+      return "text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-200 font-medium";
     } else if (centerName?.toLowerCase().includes('elite')) {
       return "text-purple-700 bg-purple-50 px-2 py-1 rounded-md border border-purple-200 font-medium";
     } else {
@@ -218,7 +218,7 @@ export function CentersTable() {
           <button className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded">
             Pending Hospital ({pendingHospitalCenters.length})
           </button>
-          <button className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded">
+          <button className="px-3 py-1 text-sm bg-teal-100 text-teal-800 rounded">
             Pending HQ ({pendingHQCenters.length})
           </button>
         </div>
@@ -259,7 +259,7 @@ export function CentersTable() {
               </tr>
             ) : (
               centers.map((center: any) => (
-                <tr key={center.id} className="hover:bg-blue-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewCenter(center)}>
+                <tr key={center.id} className="hover:bg-teal-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewCenter(center)}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-2 h-12 bg-green-400 rounded-l-md mr-3"></div>
@@ -303,7 +303,7 @@ export function CentersTable() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button 
-                      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors duration-200"
+                      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors duration-200"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleViewCenter(center);

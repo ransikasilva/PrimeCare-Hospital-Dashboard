@@ -66,9 +66,9 @@ export function LiveAlerts({ data, filter }: LiveAlertsProps) {
         };
       case 'Info':
         return {
-          container: 'border-l-4 border-blue-500 bg-blue-50',
-          icon: 'text-blue-500',
-          badge: 'bg-blue-100 text-blue-800'
+          container: 'border-l-4 border-teal-500 bg-teal-50',
+          icon: 'text-teal-500',
+          badge: 'bg-teal-100 text-teal-800'
         };
     }
   };

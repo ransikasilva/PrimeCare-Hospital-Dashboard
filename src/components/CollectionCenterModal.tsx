@@ -163,7 +163,7 @@ export function CollectionCenterModal({
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'assigned':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-teal-100 text-teal-800';
       case 'picked_up':
         return 'bg-purple-100 text-purple-800';
       case 'delivered':
@@ -232,7 +232,7 @@ export function CollectionCenterModal({
           <div 
             className="relative p-8 text-white"
             style={{
-              background: 'linear-gradient(135deg, #5DADE2 0%, #4A9BC7 100%)'
+              background: 'linear-gradient(135deg, #4ECDC4 0%, #4A9BC7 100%)'
             }}
           >
             <button
@@ -284,8 +284,8 @@ export function CollectionCenterModal({
                 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <User className="w-6 h-6 text-teal-600" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Contact Person</p>
@@ -339,8 +339,8 @@ export function CollectionCenterModal({
                 
                 <div className="space-y-4">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                      <MapPin className="w-6 h-6 text-indigo-600" />
+                    <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <MapPin className="w-6 h-6 text-teal-600" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Address</p>
@@ -399,13 +399,13 @@ export function CollectionCenterModal({
               <div className="mt-8 pt-6 border-t border-gray-200">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <Package className="w-6 h-6 text-blue-600" />
+                    <Package className="w-6 h-6 text-teal-600" />
                     <h3 className="text-xl font-bold text-gray-800">Orders History</h3>
                   </div>
 
                   <button
                     onClick={() => setShowOrdersSection(!showOrdersSection)}
-                    className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200"
+                    className="px-4 py-2 text-sm font-medium text-teal-600 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors duration-200"
                   >
                     {showOrdersSection ? 'Hide Orders' : 'View Orders'}
                   </button>
@@ -593,7 +593,7 @@ export function CollectionCenterModal({
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
                         placeholder="Please provide a detailed reason for rejecting this collection center..."
-                        className="w-full p-4 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-blue-500 resize-none"
+                        className="w-full p-4 border border-gray-300 rounded-xl focus:border-teal-500 focus:ring-blue-500 resize-none"
                         rows={3}
                       />
                     </div>

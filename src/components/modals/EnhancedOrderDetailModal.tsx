@@ -146,8 +146,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'pending_rider_assignment': 'bg-yellow-100 text-yellow-800',
-      'assigned': 'bg-blue-100 text-blue-800',
-      'pickup_started': 'bg-indigo-100 text-indigo-800',
+      'assigned': 'bg-teal-100 text-teal-800',
+      'pickup_started': 'bg-teal-100 text-teal-800',
       'picked_up': 'bg-purple-100 text-purple-800',
       'in_transit': 'bg-purple-100 text-purple-800',
       'delivery_started': 'bg-cyan-100 text-cyan-800',
@@ -210,8 +210,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-teal-100 rounded-lg">
+              <Package className="w-6 h-6 text-teal-600" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Order Details</h2>
@@ -254,7 +254,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                   onClick={() => setActiveTab(tab.key)}
                   className={`px-4 py-3 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
                     activeTab === tab.key
-                      ? 'border-blue-600 text-blue-600'
+                      ? 'border-teal-600 text-teal-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -270,7 +270,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center h-96">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-96">
@@ -376,7 +376,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         {orderDetails.order.samples.map((sample: any, index: number) => (
                           <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-3">
-                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              <div className="w-2 h-2 rounded-full bg-teal-500"></div>
                               <div>
                                 <p className="font-medium text-gray-900 capitalize">{sample.sample_type}</p>
                                 <p className="text-sm text-gray-600">Quantity: {sample.quantity}</p>
@@ -444,9 +444,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         <span className="font-medium">Handover Delivery Distances</span>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                        <div className="bg-blue-50 p-3 rounded-lg">
-                          <label className="text-xs text-blue-900 font-medium">Pickup</label>
-                          <p className="text-lg font-bold text-blue-900 mt-1">
+                        <div className="bg-teal-50 p-3 rounded-lg">
+                          <label className="text-xs text-teal-900 font-medium">Pickup</label>
+                          <p className="text-lg font-bold text-teal-900 mt-1">
                             {orderDetails.order?.pickup_distance_km
                               ? `${orderDetails.order.pickup_distance_km.toFixed(1)} km`
                               : '—'}
@@ -489,9 +489,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                   ) : (
                     // Normal delivery - show 3 distance cards
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <label className="text-sm text-blue-900">Pickup Distance</label>
-                        <p className="text-2xl font-bold text-blue-900 mt-1">
+                      <div className="bg-teal-50 p-4 rounded-lg">
+                        <label className="text-sm text-teal-900">Pickup Distance</label>
+                        <p className="text-2xl font-bold text-teal-900 mt-1">
                           {orderDetails.order?.pickup_distance_km
                             ? `${orderDetails.order.pickup_distance_km.toFixed(1)} km`
                             : 'Calculating...'}
@@ -542,7 +542,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         {orderDetails.qr_scans.map((scan, index) => (
                           <div key={index} className="relative pl-14">
                             {/* Timeline dot */}
-                            <div className="absolute left-4 top-2 w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow"></div>
+                            <div className="absolute left-4 top-2 w-4 h-4 bg-teal-600 rounded-full border-2 border-white shadow"></div>
 
                             <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                               <div className="flex items-start justify-between mb-2">
@@ -599,8 +599,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       {orderDetails.qr_scans.map((scan, index) => (
                         <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                              <Scan className="w-5 h-5 text-blue-600" />
+                            <div className="p-2 bg-teal-100 rounded-lg">
+                              <Scan className="w-5 h-5 text-teal-600" />
                             </div>
                             <div>
                               <h4 className="font-semibold text-gray-900">Scan #{index + 1}</h4>
@@ -646,7 +646,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                     <button
                       onClick={handleRefreshLocation}
                       disabled={refreshing}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      className="px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                       Refresh
@@ -692,7 +692,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       }
                     />
                     {orderDetails.location_tracking && orderDetails.location_tracking.length > 0 ? (
-                      <div className="mt-4 flex items-center justify-between text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                      <div className="mt-4 flex items-center justify-between text-sm text-gray-600 bg-teal-50 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Route className="w-4 h-4" />
                           <span>{orderDetails.location_tracking.length} tracking points recorded</span>
@@ -702,9 +702,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         </span>
                       </div>
                     ) : orderDetails.order?.rider_current_location?.lat && orderDetails.order?.rider_current_location?.lng ? (
-                      <div className="mt-4 flex items-center justify-between text-sm text-gray-600 bg-indigo-50 p-3 rounded-lg">
+                      <div className="mt-4 flex items-center justify-between text-sm text-gray-600 bg-teal-50 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Navigation className="w-4 h-4 text-indigo-600" />
+                          <Navigation className="w-4 h-4 text-teal-600" />
                           <span>Showing rider's current location</span>
                         </div>
                         <span className="text-xs text-gray-500">

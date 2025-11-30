@@ -82,7 +82,7 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
 
           {/* Date Range Display */}
           <div className="flex space-x-2 text-sm text-gray-600">
-            <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full border">
+            <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full border">
               {startDate} to {endDate}
             </span>
             <span className="px-3 py-1 bg-gray-50 text-gray-600 rounded-full border">
@@ -100,7 +100,7 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
         {/* Stats Summary */}
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{totalKM.toFixed(1)}</p>
+            <p className="text-2xl font-bold text-teal-600">{totalKM.toFixed(1)}</p>
             <p className="text-xs text-gray-500">Total KM</p>
           </div>
           <div className="text-center">
@@ -147,7 +147,7 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
                   return (
                     <div className="bg-white p-3 shadow-lg rounded-lg border">
                       <p className="font-semibold text-gray-900">{label}</p>
-                      <p className="text-blue-600">
+                      <p className="text-teal-600">
                         <span className="font-medium">KM:</span> {data.daily_km}
                       </p>
                       <p className="text-green-600">

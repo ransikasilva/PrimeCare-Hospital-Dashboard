@@ -196,30 +196,30 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
             {/* Left Column - QR Generation */}
             <div className="space-y-6">
               {/* Order Details */}
-              <div className="bg-blue-50 rounded-xl p-4">
-                <h4 className="font-semibold text-blue-900 mb-3">Order Information</h4>
+              <div className="bg-teal-50 rounded-xl p-4">
+                <h4 className="font-semibold text-teal-900 mb-3">Order Information</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-blue-600 font-medium">Priority:</span>
+                    <span className="text-teal-600 font-medium">Priority:</span>
                     <div className={`inline-block ml-2 px-2 py-1 rounded-full text-xs font-medium ${
                       order.urgency === 'emergency' ? 'bg-red-100 text-red-800' :
                       order.urgency === 'urgent' ? 'bg-orange-100 text-orange-800' :
-                      'bg-blue-100 text-blue-800'
+                      'bg-teal-100 text-teal-800'
                     }`}>
                       {order.urgency || 'routine'}
                     </div>
                   </div>
                   <div>
-                    <span className="text-blue-600 font-medium">Status:</span>
-                    <p className="text-blue-900 text-xs mt-1">{order.status}</p>
+                    <span className="text-teal-600 font-medium">Status:</span>
+                    <p className="text-teal-900 text-xs mt-1">{order.status}</p>
                   </div>
                   <div>
-                    <span className="text-blue-600 font-medium">Rider:</span>
-                    <p className="text-blue-900 text-xs mt-1">{order.rider_name || 'Unassigned'}</p>
+                    <span className="text-teal-600 font-medium">Rider:</span>
+                    <p className="text-teal-900 text-xs mt-1">{order.rider_name || 'Unassigned'}</p>
                   </div>
                   <div>
-                    <span className="text-blue-600 font-medium">Sample:</span>
-                    <p className="text-blue-900 text-xs mt-1">{order.sample_type}</p>
+                    <span className="text-teal-600 font-medium">Sample:</span>
+                    <p className="text-teal-900 text-xs mt-1">{order.sample_type}</p>
                   </div>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={downloadQR}
-                      className="flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="flex items-center justify-center space-x-2 bg-teal-600 text-white px-4 py-3 rounded-lg hover:bg-teal-700 transition-colors"
                     >
                       <Download className="w-4 h-4" />
                       <span>Download</span>
@@ -303,7 +303,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
                     <button
                       onClick={generateDeliveryQR}
                       disabled={loading}
-                      className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center space-x-2 bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {loading ? (
                         <RefreshCw className="w-4 h-4 animate-spin" />
@@ -327,7 +327,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
 
                 {loadingChain ? (
                   <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
                   </div>
                 ) : chainOfCustody.length === 0 ? (
                   <div className="text-center py-8">
@@ -354,7 +354,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
                                 </h5>
                                 {event.qr_type && (
                                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                    event.qr_type === 'pickup' ? 'bg-blue-100 text-blue-800' :
+                                    event.qr_type === 'pickup' ? 'bg-teal-100 text-teal-800' :
                                     event.qr_type === 'delivery' ? 'bg-green-100 text-green-800' :
                                     event.qr_type === 'handover' ? 'bg-orange-100 text-orange-800' :
                                     'bg-gray-100 text-gray-800'
@@ -426,7 +426,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
                     <span className="text-green-700">Status:</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'picked_up' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'picked_up' ? 'bg-teal-100 text-teal-800' :
                       order.status === 'assigned' ? 'bg-purple-100 text-purple-800' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
@@ -454,7 +454,7 @@ export function QRModal({ isOpen, onClose, order }: QRModalProps) {
                 setError("");
                 setSuccess("");
               }}
-              className="px-4 py-2 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"
+              className="px-4 py-2 text-teal-700 bg-teal-100 rounded-lg hover:bg-teal-200 transition-colors"
             >
               Generate New
             </button>

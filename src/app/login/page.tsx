@@ -132,7 +132,7 @@ export default function LoginPage() {
             <div className="flex items-center space-x-4">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center bg-white"
-                style={{ boxShadow: '0 4px 16px rgba(93, 173, 226, 0.3)' }}
+                style={{ boxShadow: '0 4px 16px rgba(78, 205, 196, 0.3)' }}
               >
                 <img src="/logo.png" alt="TransFleet Logo" className="w-8 h-8 object-contain" />
               </div>
@@ -269,7 +269,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="text-base hover:underline font-medium"
-                  style={{ color: '#5DADE2' }}
+                  style={{ color: '#4ECDC4' }}
                 >
                   Forgot password?
                 </button>
@@ -280,7 +280,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="w-full py-4 px-6 rounded-xl font-semibold transition-all duration-200 hover:opacity-90 disabled:opacity-50 shadow-lg"
                 style={{
-                  backgroundColor: '#5DADE2',
+                  backgroundColor: '#4ECDC4',
                   color: '#FFFFFF',
                   fontSize: '18px'
                 }}
@@ -306,8 +306,8 @@ export default function LoginPage() {
                   className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
                   style={{
                     backgroundColor: 'transparent',
-                    border: '2px solid #5DADE2',
-                    color: '#5DADE2',
+                    border: '2px solid #4ECDC4',
+                    color: '#4ECDC4',
                     fontSize: '16px'
                   }}
                 >

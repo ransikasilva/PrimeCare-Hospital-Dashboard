@@ -56,7 +56,7 @@ const quickActions = [
     title: 'Manage Centers',
     description: 'Add new collection center',
     link: '/centers',
-    gradient: ['#5DADE2', '#4A9BC7'],
+    gradient: ['#4ECDC4', '#4A9BC7'],
     count: '12 Active'
   },
   {
@@ -64,7 +64,7 @@ const quickActions = [
     title: 'Manage Orders',
     description: 'Manual order entry',
     link: '/orders',
-    gradient: ['#5DADE2', '#6BB6E8'],
+    gradient: ['#4ECDC4', '#6BB6E8'],
     count: '18 Today'
   },
   {
@@ -72,7 +72,7 @@ const quickActions = [
     title: 'Manage Riders',
     description: 'Rider assignments',
     link: '/riders',
-    gradient: ['#5DADE2', '#4FA5D8'],
+    gradient: ['#4ECDC4', '#4FA5D8'],
     count: '8 Available'
   },
   {
@@ -80,7 +80,7 @@ const quickActions = [
     title: 'View Reports',
     description: 'Analytics & insights',
     link: '/reports',
-    gradient: ['#5DADE2', '#7BBFEA'],
+    gradient: ['#4ECDC4', '#7BBFEA'],
     count: '96% SLA'
   }
 ];
@@ -203,8 +203,8 @@ export default function DashboardPage() {
       <div 
         className="relative overflow-hidden rounded-3xl p-8"
         style={{
-          background: 'linear-gradient(135deg, #5DADE2 0%, #4A9BC7 100%)',
-          boxShadow: '0 20px 40px rgba(93, 173, 226, 0.3)'
+          background: 'linear-gradient(135deg, #4ECDC4 0%, #4A9BC7 100%)',
+          boxShadow: '0 20px 40px rgba(78, 205, 196, 0.3)'
         }}
       >
         <div className="relative z-10">
@@ -282,8 +282,8 @@ export default function DashboardPage() {
                   <button 
                     className="flex items-center space-x-2 px-6 py-3 rounded-2xl transition-all duration-300 hover:transform hover:scale-105"
                     style={{
-                      background: 'linear-gradient(135deg, #5DADE2 0%, #4A9BC7 100%)',
-                      boxShadow: '0 8px 32px rgba(93, 173, 226, 0.3)'
+                      background: 'linear-gradient(135deg, #4ECDC4 0%, #4A9BC7 100%)',
+                      boxShadow: '0 8px 32px rgba(78, 205, 196, 0.3)'
                     }}
                   >
                     <span className="text-white font-semibold">View All</span>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
                             <div 
                               className="w-12 h-12 rounded-2xl flex items-center justify-center"
                               style={{
-                                background: 'linear-gradient(135deg, #5DADE2 0%, #4A9BC7 100%)'
+                                background: 'linear-gradient(135deg, #4ECDC4 0%, #4A9BC7 100%)'
                               }}
                             >
                               <Building2 className="w-6 h-6 text-white" />

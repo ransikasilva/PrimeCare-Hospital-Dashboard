@@ -30,8 +30,8 @@ export default function DemoPendingApprovalPage() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         {/* Demo Banner */}
-        <div className="mb-6 p-3 bg-blue-100 border border-blue-300 rounded-lg">
-          <p className="text-sm text-blue-800 text-center font-medium">
+        <div className="mb-6 p-3 bg-teal-100 border border-teal-300 rounded-lg">
+          <p className="text-sm text-teal-800 text-center font-medium">
             🎯 DEMO: Pending Hospital Approval Page Preview
           </p>
         </div>
@@ -161,8 +161,8 @@ export default function DemoPendingApprovalPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+              <p className="text-sm text-teal-800">
                 <strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM<br />
                 <strong>Note:</strong> Poya days and public holidays may affect processing times
               </p>

@@ -299,7 +299,7 @@ export default function AuditCompliancePage() {
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
       case 'QR-SCAN':
-        return <Shield className="w-4 h-4 text-blue-600" />;
+        return <Shield className="w-4 h-4 text-teal-600" />;
       case 'STATUS-CHANGE':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
       case 'GPS-UPDATE':
@@ -365,7 +365,7 @@ export default function AuditCompliancePage() {
           </select>
           <button
             onClick={handleExportAuditTrail}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-2"
+            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Export Audit Trail
@@ -384,8 +384,8 @@ export default function AuditCompliancePage() {
               <p className="text-sm text-gray-500 mt-1">QR scans and status updates</p>
               <p className="text-xs text-green-600 mt-1">+{auditMetrics.changeFromYesterday}% from yesterday</p>
             </div>
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Shield className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-teal-100 rounded-full">
+              <Shield className="w-6 h-6 text-teal-600" />
             </div>
           </div>
         </div>
@@ -478,7 +478,7 @@ export default function AuditCompliancePage() {
                         <User className="inline w-4 h-4 mr-1" />
                         {event.actor}
                       </p>
-                      <p className="text-sm text-blue-600 mt-2 font-medium">{event.action}</p>
+                      <p className="text-sm text-teal-600 mt-2 font-medium">{event.action}</p>
                     </div>
                     <div className="text-sm font-medium text-gray-900">{event.time}</div>
                   </div>
@@ -501,7 +501,7 @@ export default function AuditCompliancePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-900">{event.type}</span>
-                      <span className="text-sm text-blue-600">{event.orderId}</span>
+                      <span className="text-sm text-teal-600">{event.orderId}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(event.status)}
@@ -546,7 +546,7 @@ export default function AuditCompliancePage() {
               <div className="mt-3">
                 <button 
                   onClick={() => handleGenerateReport('custody-cert')}
-                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+                  className="px-3 py-1 bg-teal-100 text-teal-700 rounded text-sm hover:bg-teal-200"
                 >
                   PDF with Digital Signatures
                 </button>

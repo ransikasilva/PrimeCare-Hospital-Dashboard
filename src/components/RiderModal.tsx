@@ -287,8 +287,8 @@ export function RiderModal({
                 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <User className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <User className="w-6 h-6 text-teal-600" />
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Full Name</p>
@@ -332,8 +332,8 @@ export function RiderModal({
 
                   {rider.address && (
                     <div className="flex items-start space-x-4">
-                      <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                        <MapPin className="w-6 h-6 text-indigo-600" />
+                      <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                        <MapPin className="w-6 h-6 text-teal-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Address</p>
@@ -431,7 +431,7 @@ export function RiderModal({
                 <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">KM Performance Statistics</h3>
                 <div className="grid grid-cols-4 gap-8">
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-blue-600 mb-2">0</p>
+                    <p className="text-3xl font-bold text-teal-600 mb-2">0</p>
                     <p className="text-sm text-gray-600 font-medium">Daily KM</p>
                     <p className="text-xs text-gray-500">Today's distance</p>
                   </div>
@@ -474,7 +474,7 @@ export function RiderModal({
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-teal-500 text-sm text-gray-900"
                         />
                       </div>
                       <div className="flex flex-col">
@@ -483,11 +483,11 @@ export function RiderModal({
                           type="date"
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-teal-500 text-sm text-gray-900"
                         />
                       </div>
                       <div className="flex items-end">
-                        <span className="px-3 py-2 text-xs text-gray-600 bg-blue-50 rounded-lg border border-blue-200">
+                        <span className="px-3 py-2 text-xs text-gray-600 bg-teal-50 rounded-lg border border-teal-200">
                           {(() => {
                             const start = new Date(startDate);
                             const end = new Date(endDate);
@@ -519,8 +519,8 @@ export function RiderModal({
                 {/* License Front */}
                 <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-teal-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-800">Driver's License (Front)</h4>
@@ -549,7 +549,7 @@ export function RiderModal({
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200 flex items-center justify-center space-x-1"
+                          className="flex-1 px-3 py-2 text-sm bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors duration-200 flex items-center justify-center space-x-1"
                           onClick={() => window.open(rider.license_image_url || rider.license_photo || rider.documents?.license, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
@@ -570,8 +570,8 @@ export function RiderModal({
                 {/* License Back */}
                 <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-blue-600" />
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-teal-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-800">Driver's License (Back)</h4>
@@ -600,7 +600,7 @@ export function RiderModal({
                       </div>
                       <div className="flex space-x-2">
                         <button
-                          className="flex-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors duration-200 flex items-center justify-center space-x-1"
+                          className="flex-1 px-3 py-2 text-sm bg-teal-50 text-teal-600 rounded-lg hover:bg-teal-100 transition-colors duration-200 flex items-center justify-center space-x-1"
                           onClick={() => window.open(rider.license_image_back_url, '_blank')}
                         >
                           <Eye className="w-4 h-4" />
@@ -786,7 +786,7 @@ export function RiderModal({
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
                         placeholder="Please provide a detailed reason for rejecting this rider..."
-                        className="w-full p-4 border border-gray-300 rounded-xl focus:border-blue-500 focus:ring-blue-500 resize-none"
+                        className="w-full p-4 border border-gray-300 rounded-xl focus:border-teal-500 focus:ring-blue-500 resize-none"
                         rows={3}
                       />
                     </div>

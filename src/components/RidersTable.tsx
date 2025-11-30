@@ -159,7 +159,7 @@ export function RidersTable() {
     switch (vehicleType?.toLowerCase()) {
       case "motorcycle":
       case "bike":
-        return "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm";
+        return "bg-teal-50 text-teal-700 border border-teal-200 shadow-sm";
       case "car":
       case "vehicle":
         return "bg-purple-50 text-purple-700 border border-purple-200 shadow-sm";
@@ -173,7 +173,7 @@ export function RidersTable() {
   const getRiderNameColor = (riderName: string) => {
     // Different colors for different riders based on name patterns
     if (riderName?.toLowerCase().includes('kamal')) {
-      return "text-blue-700 bg-blue-50 px-2 py-1 rounded-md border border-blue-200 font-medium";
+      return "text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-200 font-medium";
     } else if (riderName?.toLowerCase().includes('silva')) {
       return "text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200 font-medium";
     } else if (riderName?.toLowerCase().includes('fernando')) {
@@ -225,7 +225,7 @@ export function RidersTable() {
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-teal-500 text-sm text-gray-900 bg-white"
           />
           <span className="text-xs text-gray-600 font-medium">
             Showing individual rider KM for {selectedDate}
@@ -273,12 +273,27 @@ export function RidersTable() {
               </tr>
             ) : (
               riders.map((rider: any) => (
-                <tr key={rider.id} className="hover:bg-indigo-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewDetails(rider)}>
+                <tr key={rider.id} className="hover:bg-teal-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewDetails(rider)}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-2 h-12 bg-indigo-400 rounded-l-md mr-3"></div>
-                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center border border-indigo-300">
-                        <span className="text-indigo-700 font-bold text-sm">
+                      <div className="w-2 h-12 bg-teal-400 rounded-l-md mr-3"></div>
+                      {rider.profile_image_url ? (
+                        <img
+                          src={rider.profile_image_url}
+                          alt={rider.rider_name || rider.name || 'Rider'}
+                          className="w-12 h-12 rounded-xl object-cover border-2 border-teal-300"
+                          onError={(e) => {
+                            // Fallback to initials if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling!.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center border border-teal-300"
+                        style={{ display: rider.profile_image_url ? 'none' : 'flex' }}
+                      >
+                        <span className="text-teal-700 font-bold text-sm">
                           {(rider.rider_name || rider.name || 'R').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </span>
                       </div>
@@ -311,7 +326,7 @@ export function RidersTable() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="px-2 py-1 text-xs font-medium rounded bg-blue-50 text-blue-700">
+                    <span className="px-2 py-1 text-xs font-medium rounded bg-teal-50 text-teal-700">
                       {riderKMData[rider.id]?.daily_km || '0'} km
                     </span>
                   </td>
@@ -341,7 +356,7 @@ export function RidersTable() {
                       </div>
                     ) : (
                       <button 
-                        className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors duration-200"
+                        className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors duration-200"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleViewDetails(rider);

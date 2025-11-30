@@ -254,7 +254,7 @@ export default function RegionalHospitalRegistrationPage() {
             <div className="flex items-center space-x-4">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center bg-white"
-                style={{ boxShadow: '0 4px 16px rgba(93, 173, 226, 0.3)' }}
+                style={{ boxShadow: '0 4px 16px rgba(78, 205, 196, 0.3)' }}
               >
                 <img src="/logo.png" alt="TransFleet Logo" className="w-8 h-8 object-contain" />
               </div>
@@ -366,7 +366,7 @@ export default function RegionalHospitalRegistrationPage() {
                         disabled={!formData.hospitalCode || verifyingCode}
                         className="px-8 py-4 rounded-xl font-semibold transition-all duration-200 hover:opacity-90 disabled:opacity-50 shadow-lg"
                         style={{
-                          backgroundColor: '#5DADE2',
+                          backgroundColor: '#4ECDC4',
                           color: '#FFFFFF',
                           fontSize: '16px'
                         }}
@@ -794,7 +794,7 @@ export default function RegionalHospitalRegistrationPage() {
                     disabled={!formData.hospitalCode || codeVerified}
                     className="px-4 py-3 rounded-lg font-medium transition-all duration-200 hover:opacity-90 disabled:opacity-50"
                     style={{
-                      backgroundColor: codeVerified ? '#58D68D' : '#5DADE2',
+                      backgroundColor: codeVerified ? '#58D68D' : '#4ECDC4',
                       color: '#FFFFFF'
                     }}
                   >
@@ -840,7 +840,7 @@ export default function RegionalHospitalRegistrationPage() {
                         disabled={isSubmitting || !codeVerified}
                         className="px-12 py-4 rounded-xl font-semibold transition-all duration-200 hover:opacity-90 disabled:opacity-50 shadow-lg"
                         style={{
-                          backgroundColor: '#5DADE2',
+                          backgroundColor: '#4ECDC4',
                           color: '#FFFFFF',
                           fontSize: '16px'
                         }}

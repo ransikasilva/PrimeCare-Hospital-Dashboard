@@ -166,8 +166,8 @@ export default function HospitalsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Hospital className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-teal-100 rounded-full">
+              <Hospital className="w-6 h-6 text-teal-600" />
             </div>
             <div className="ml-4">
               <p className="text-2xl font-semibold text-gray-900">{allRegionalHospitals.length}</p>
@@ -212,7 +212,7 @@ export default function HospitalsPage() {
                 placeholder="Search hospitals by name or city..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-teal-500"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function HospitalsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-teal-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -277,8 +277,8 @@ export default function HospitalsPage() {
                     <tr key={hospital.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Hospital className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <Hospital className="w-5 h-5 text-teal-600" />
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{hospital.name}</div>
@@ -350,7 +350,7 @@ export default function HospitalsPage() {
                               setSelectedHospitalId(hospital.id);
                               setShowDetailModal(true);
                             }}
-                            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center px-4 py-2 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 transition-colors"
                           >
                             <Eye className="w-4 h-4 mr-2" />
                             View Details

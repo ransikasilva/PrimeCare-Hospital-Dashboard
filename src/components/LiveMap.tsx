@@ -320,7 +320,7 @@ export function LiveMap() {
       }
       if (rider.availability_status === 'busy') {
         markerColor = '#3B82F6'; // blue
-        statusBadge = 'bg-blue-100 text-blue-800';
+        statusBadge = 'bg-teal-100 text-teal-800';
       }
 
       const marker = new window.google.maps.Marker({
@@ -441,7 +441,7 @@ export function LiveMap() {
               </div>
               <div class="flex items-center">
                 <span class="w-20 text-gray-600">Type:</span>
-                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">${center.center_type}</span>
+                <span class="inline-block px-2 py-1 bg-teal-100 text-teal-800 rounded text-xs font-medium">${center.center_type}</span>
               </div>
               <div class="flex items-center">
                 <span class="w-20 text-gray-600">Orders:</span>
@@ -568,7 +568,7 @@ export function LiveMap() {
                 <span className="text-sm text-gray-600">Available ({riderCounts.available})</span>
               </div>
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                <div className="w-3 h-3 bg-teal-500 rounded-full mr-2"></div>
                 <span className="text-sm text-gray-600">Busy ({riderCounts.busy})</span>
               </div>
               <div className="flex items-center">
@@ -598,7 +598,7 @@ export function LiveMap() {
                   <div className="text-right">
                     <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
                       rider.availability_status === 'available' ? 'bg-green-500' :
-                      rider.availability_status === 'busy' ? 'bg-blue-500' : 'bg-gray-500'
+                      rider.availability_status === 'busy' ? 'bg-teal-500' : 'bg-gray-500'
                     }`}></span>
                     <span className="text-sm font-medium">
                       {rider.availability_status?.charAt(0).toUpperCase() + rider.availability_status?.slice(1)}
@@ -686,7 +686,7 @@ export function LiveMap() {
   //   return (
   //     <div className="bg-white rounded-lg shadow h-96 flex items-center justify-center">
   //       <div className="text-center">
-  //         <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+  //         <div className="w-8 h-8 border-4 border-teal-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
   //         <p className="text-gray-600">Loading locations...</p>
   //       </div>
   //     </div>
@@ -705,7 +705,7 @@ export function LiveMap() {
               <span className="text-sm text-gray-600">Available ({riderCounts.available})</span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <div className="w-3 h-3 bg-teal-500 rounded-full mr-2"></div>
               <span className="text-sm text-gray-600">Busy ({riderCounts.busy})</span>
             </div>
             <div className="flex items-center">

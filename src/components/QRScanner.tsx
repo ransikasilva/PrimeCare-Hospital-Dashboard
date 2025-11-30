@@ -53,7 +53,7 @@ export function QRScanner() {
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <QrCode className="w-6 h-6 text-blue-600" />
+          <QrCode className="w-6 h-6 text-teal-600" />
           <div>
             <h3 className="text-lg font-medium text-gray-900">QR Scanner</h3>
             <p className="text-sm text-gray-600">Scan delivery QR codes to confirm sample receipt</p>
@@ -73,7 +73,7 @@ export function QRScanner() {
             onChange={handleManualInput}
             placeholder="Paste QR code data here or scan with camera..."
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-teal-500"
           />
         </div>
 
@@ -82,7 +82,7 @@ export function QRScanner() {
           <button
             onClick={handleScan}
             disabled={loading || !qrData.trim()}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            className="flex items-center space-x-2 px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             {loading ? (
               <>

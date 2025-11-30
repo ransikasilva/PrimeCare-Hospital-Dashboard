@@ -111,7 +111,7 @@ function EmailVerificationContent() {
                 <div className="space-y-3">
                   <Link
                     href="/login"
-                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Go to Login
                   </Link>
@@ -134,8 +134,8 @@ function EmailVerificationContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="bg-blue-100 p-3 rounded-full">
-            <Mail className="h-8 w-8 text-blue-600" />
+          <div className="bg-teal-100 p-3 rounded-full">
+            <Mail className="h-8 w-8 text-teal-600" />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
@@ -164,7 +164,7 @@ function EmailVerificationContent() {
                   value={otpCode}
                   onChange={handleOTPInputChange}
                   placeholder="000000"
-                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-2xl font-mono tracking-widest text-gray-900"
+                  className="appearance-none block w-full px-3 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-teal-500 text-center text-2xl font-mono tracking-widest text-gray-900"
                   maxLength={6}
                   autoComplete="off"
                 />
@@ -185,7 +185,7 @@ function EmailVerificationContent() {
               <button
                 type="submit"
                 disabled={isVerifying || otpCode.length !== 6}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {isVerifying ? (
                   <div className="flex items-center space-x-2">
@@ -207,7 +207,7 @@ function EmailVerificationContent() {
               <button
                 onClick={handleResendOTP}
                 disabled={isResending || resendTimer > 0}
-                className="mt-2 text-blue-600 hover:text-blue-500 text-sm font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
+                className="mt-2 text-teal-600 hover:text-teal-500 text-sm font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
               >
                 {isResending ? (
                   'Sending...'
@@ -235,8 +235,8 @@ function EmailVerificationContent() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="text-center text-sm text-blue-800">
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+          <div className="text-center text-sm text-teal-800">
             <p className="font-medium">What happens next?</p>
             <ul className="mt-2 space-y-1 text-left">
               <li>• Verify your email address</li>
@@ -256,7 +256,7 @@ export default function EmailVerificationPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Clock className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+          <Clock className="h-8 w-8 animate-spin mx-auto text-teal-600" />
           <p className="mt-2 text-sm text-gray-600">Loading...</p>
         </div>
       </div>

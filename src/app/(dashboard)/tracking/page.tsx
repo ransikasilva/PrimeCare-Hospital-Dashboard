@@ -46,7 +46,7 @@ export default function TrackingPage() {
       case 'available':
         return 'px-2 py-1 text-xs bg-green-100 text-green-800 rounded';
       case 'busy':
-        return 'px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded';
+        return 'px-2 py-1 text-xs bg-teal-100 text-teal-800 rounded';
       case 'offline':
         return 'px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded';
       default:
@@ -75,7 +75,7 @@ export default function TrackingPage() {
               </div>
             ) : ridersLoading ? (
               <div className="text-center py-4">
-                <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
+                <div className="w-6 h-6 border-2 border-teal-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-2"></div>
                 <p className="text-sm text-gray-600">Loading riders...</p>
               </div>
             ) : riders.length > 0 ? (

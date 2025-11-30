@@ -125,7 +125,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
   const getStatusBadge = (status: string) => {
     const badges: Record<string, { color: string; text: string }> = {
       'pending_rider_assignment': { color: 'bg-yellow-100 text-yellow-800', text: 'Pending Assignment' },
-      'assigned': { color: 'bg-blue-100 text-blue-800', text: 'Assigned' },
+      'assigned': { color: 'bg-teal-100 text-teal-800', text: 'Assigned' },
       'in_transit': { color: 'bg-purple-100 text-purple-800', text: 'In Transit' },
       'delivered': { color: 'bg-green-100 text-green-800', text: 'Delivered' },
       'cancelled': { color: 'bg-red-100 text-red-800', text: 'Cancelled' },
@@ -186,8 +186,8 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Building2 className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-teal-100 rounded-lg">
+                <Building2 className="w-6 h-6 text-teal-600" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">{details?.hospital?.name || 'Loading...'}</h2>
@@ -224,7 +224,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`px-4 py-3 font-medium text-sm transition-colors relative flex items-center gap-2 ${
                       activeTab === tab.id
-                        ? 'text-blue-600 border-b-2 border-blue-600'
+                        ? 'text-teal-600 border-b-2 border-teal-600'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -232,7 +232,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                     {tab.label}
                     {tab.count !== undefined && (
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        activeTab === tab.id ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-700'
+                        activeTab === tab.id ? 'bg-teal-100 text-teal-700' : 'bg-gray-200 text-gray-700'
                       }`}>
                         {tab.count}
                       </span>
@@ -247,7 +247,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
           <div className="flex-1 overflow-y-auto p-6">
             {loading ? (
               <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
               </div>
             ) : (
               <>
@@ -256,12 +256,12 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                   <div className="space-y-6">
                     {/* Stats Grid */}
                     <div className="grid grid-cols-4 gap-4">
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-teal-200">
                         <div className="flex items-center gap-2 mb-2">
-                          <Package className="w-5 h-5 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-900">Total Orders</span>
+                          <Package className="w-5 h-5 text-teal-600" />
+                          <span className="text-sm font-medium text-teal-900">Total Orders</span>
                         </div>
-                        <p className="text-3xl font-bold text-blue-900">{details?.stats.totalOrders}</p>
+                        <p className="text-3xl font-bold text-teal-900">{details?.stats.totalOrders}</p>
                       </div>
                       <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
                         <div className="flex items-center gap-2 mb-2">
@@ -419,7 +419,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                                 <td className="px-4 py-3">
                                   <button
                                     onClick={() => handleViewOrder(order.id)}
-                                    className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                                    className="text-teal-600 hover:text-teal-800 font-medium text-sm"
                                   >
                                     View
                                   </button>

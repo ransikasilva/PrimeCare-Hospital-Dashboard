@@ -241,8 +241,8 @@ export default function PendingApprovalPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="mt-4 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+              <p className="text-sm text-teal-800">
                 <strong>Business Hours:</strong> Monday - Friday, 9:00 AM - 6:00 PM<br />
                 <strong>Note:</strong> Poya days and public holidays may affect processing times
               </p>

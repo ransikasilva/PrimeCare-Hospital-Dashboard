@@ -339,7 +339,7 @@ export function OrderTrackingMap({
     return (
       <div className="bg-gray-100 rounded-lg p-8 flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
@@ -355,7 +355,7 @@ export function OrderTrackingMap({
         <div className="font-semibold text-gray-700 mb-2">Legend</div>
         {pickupLocation && (
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <div className="w-3 h-3 rounded-full bg-teal-500"></div>
             <span className="text-gray-600">Pickup</span>
           </div>
         )}
@@ -373,7 +373,7 @@ export function OrderTrackingMap({
         )}
         {locationPoints.length > 0 && (
           <div className="flex items-center gap-2">
-            <div className="w-3 h-1 bg-indigo-500"></div>
+            <div className="w-3 h-1 bg-teal-500"></div>
             <span className="text-gray-600">Rider Path</span>
           </div>
         )}
@@ -391,7 +391,7 @@ export function OrderTrackingMap({
         )}
         {riderLocation && !locationPoints.length && (
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+            <div className="w-3 h-3 rounded-full bg-teal-500"></div>
             <span className="text-gray-600">Rider Location</span>
           </div>
         )}

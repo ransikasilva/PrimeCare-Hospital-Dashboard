@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useMyHospitals } from "@/hooks/useApi";
 import { useAuth } from "@/contexts/AuthContext";
-import { SearchBar } from "./SearchBar";
-import {
-  Bell,
-  ChevronDown,
+import { 
+  Bell, 
+  ChevronDown, 
+  Search, 
   Settings,
   LogOut,
   User,
@@ -43,6 +43,7 @@ const pathTitles: { [key: string]: string } = {
 export function Header() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -148,7 +149,43 @@ export function Header() {
 
         {/* Center Section - Search */}
         <div className="flex-1 max-w-xl mx-8">
-          <SearchBar />
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search orders, riders, centers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-2xl border-0 text-gray-800 placeholder-gray-500 transition-all duration-300 focus:outline-none focus:ring-2"
+              style={{
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,250,252,0.8) 100%)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(10px)'
+              }}
+            />
+            {searchQuery && (
+              <div 
+                className="absolute top-full left-0 right-0 mt-2 rounded-2xl border-0 overflow-hidden z-50"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                <div className="p-2">
+                  <div className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Search Results
+                  </div>
+                  <div className="space-y-1">
+                    <div className="px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors duration-200">
+                      <div className="font-medium text-gray-800">Order #1247</div>
+                      <div className="text-sm text-gray-500">MediLab Centre → General Hospital</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Section - Actions & User */}

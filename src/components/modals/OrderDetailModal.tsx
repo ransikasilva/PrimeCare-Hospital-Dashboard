@@ -54,7 +54,7 @@ export function OrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps)
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       'pending_rider_assignment': 'text-yellow-600 bg-yellow-50',
-      'assigned': 'text-blue-600 bg-blue-50',
+      'assigned': 'text-teal-600 bg-teal-50',
       'in_transit': 'text-purple-600 bg-purple-50',
       'delivered': 'text-green-600 bg-green-50',
       'cancelled': 'text-red-600 bg-red-50',
@@ -95,8 +95,8 @@ export function OrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps)
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-50 to-white">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-teal-100 rounded-lg">
+              <Package className="w-6 h-6 text-teal-600" />
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Order Details</h2>
@@ -115,7 +115,7 @@ export function OrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps)
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center h-96">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
             </div>
           ) : (
             <div className="space-y-6">
@@ -257,9 +257,9 @@ export function OrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps)
               {/* Distance & Payment */}
               {(order?.estimated_distance_km || order?.estimated_payment) && (
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <label className="text-sm text-blue-900">Estimated Distance</label>
-                    <p className="text-2xl font-bold text-blue-900 mt-1">
+                  <div className="bg-teal-50 p-4 rounded-lg">
+                    <label className="text-sm text-teal-900">Estimated Distance</label>
+                    <p className="text-2xl font-bold text-teal-900 mt-1">
                       {order.estimated_distance_km?.toFixed(1)} km
                     </p>
                   </div>

@@ -273,7 +273,7 @@ export default function ReportsPage() {
           </select>
           <button 
             onClick={() => handleExport('csv')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 flex items-center gap-2"
+            className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Export CSV Report
@@ -292,8 +292,8 @@ export default function ReportsPage() {
               <p className="text-sm text-gray-500 mt-1">{deliveredOrders} delivered, {activeOrders} active</p>
               <p className="text-xs text-green-600 mt-1">+{Math.floor(Math.random() * 10 + 3)} from previous period</p>
             </div>
-            <div className="p-2 bg-blue-100 rounded-full">
-              <FileText className="w-6 h-6 text-blue-600" />
+            <div className="p-2 bg-teal-100 rounded-full">
+              <FileText className="w-6 h-6 text-teal-600" />
             </div>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function ReportsPage() {
                   <div key={data.hour} className="flex flex-col items-center flex-1">
                     <div className="text-xs text-gray-600 mb-1">{data.deliveries}</div>
                     <div 
-                      className="w-full bg-blue-500 rounded-t"
+                      className="w-full bg-teal-500 rounded-t"
                       style={{ height: `${Math.max(height, 5)}%` }}
                     />
                     <div className="text-xs text-gray-500 mt-1 transform -rotate-45 origin-center">
@@ -382,7 +382,7 @@ export default function ReportsPage() {
                     'Blood': 'bg-red-500',
                     'Urine': 'bg-yellow-500', 
                     'Other': 'bg-orange-500',
-                    'Saliva': 'bg-blue-500',
+                    'Saliva': 'bg-teal-500',
                     'Stool': 'bg-green-500'
                   };
                   return (
@@ -407,7 +407,7 @@ export default function ReportsPage() {
             ) : (
               ordersLoading ? (
                 <div className="text-center">
-                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2" />
+                  <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-2" />
                   <p className="text-gray-500">Loading sample data...</p>
                 </div>
               ) : (
@@ -460,7 +460,7 @@ export default function ReportsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                       rider.efficiency === 'Excellent' ? 'bg-green-100 text-green-800' : 
-                      rider.efficiency === 'Good' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'
+                      rider.efficiency === 'Good' ? 'bg-teal-100 text-teal-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
                       {rider.efficiency}
                     </span>
