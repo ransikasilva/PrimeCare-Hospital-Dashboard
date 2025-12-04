@@ -21,6 +21,8 @@ import {
   Activity,
   Flag,
   ArrowRight,
+  Users,
+  RefreshCcw,
 } from 'lucide-react';
 
 interface OrderDetailProps {
@@ -268,6 +270,102 @@ export function OrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps)
                     <p className="text-2xl font-bold text-green-900 mt-1">
                       Rs. {order.estimated_payment?.toFixed(2)}
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Handover History */}
+              {order?.handover_history && order.handover_history.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <RefreshCcw className="w-5 h-5 text-gray-400" />
+                    <h3 className="font-semibold text-gray-900">Handover History</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {order.handover_history.map((handover: any, index: number) => (
+                      <div key={handover.handover_id || index} className={`p-4 rounded-lg border ${
+                        handover.completed
+                          ? 'bg-green-50 border-green-200'
+                          : handover.cancelled_declined
+                            ? 'bg-red-50 border-red-200'
+                            : 'bg-yellow-50 border-yellow-200'
+                      }`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Users className={`w-5 h-5 ${
+                              handover.completed
+                                ? 'text-green-600'
+                                : handover.cancelled_declined
+                                  ? 'text-red-600'
+                                  : 'text-yellow-600'
+                            }`} />
+                            <span className={`font-medium ${
+                              handover.completed
+                                ? 'text-green-900'
+                                : handover.cancelled_declined
+                                  ? 'text-red-900'
+                                  : 'text-yellow-900'
+                            }`}>
+                              {handover.status === 'confirmed' ? 'Handover Completed' :
+                               handover.status === 'cancelled' ? 'Handover Cancelled' :
+                               handover.status === 'declined' ? 'Handover Declined' :
+                               handover.status === 'expired' ? 'Handover Expired' :
+                               'Handover Pending'}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            {formatDate(handover.timeline.initiated_at)}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                          <div>
+                            <label className="text-gray-600">Original Rider</label>
+                            <p className="font-medium text-gray-900">{handover.original_rider.name}</p>
+                            <p className="text-gray-600 text-xs">{handover.original_rider.phone}</p>
+                          </div>
+                          {handover.new_rider && (
+                            <div>
+                              <label className="text-gray-600">New Rider</label>
+                              <p className="font-medium text-gray-900">{handover.new_rider.name}</p>
+                              <p className="text-gray-600 text-xs">{handover.new_rider.phone}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {handover.reason && (
+                          <div className="mb-2">
+                            <label className="text-gray-600 text-sm">Reason</label>
+                            <p className="text-gray-900 text-sm">{handover.reason}</p>
+                          </div>
+                        )}
+
+                        {handover.notes && (
+                          <div className="mb-2">
+                            <label className="text-gray-600 text-sm">Notes</label>
+                            <p className="text-gray-900 text-sm">{handover.notes}</p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-gray-600 mt-3 pt-3 border-t border-gray-200">
+                          {handover.timeline.initiated_at && (
+                            <div>
+                              <span className="font-medium">Initiated:</span> {formatDate(handover.timeline.initiated_at)}
+                            </div>
+                          )}
+                          {handover.timeline.accepted_at && (
+                            <div>
+                              <span className="font-medium">Accepted:</span> {formatDate(handover.timeline.accepted_at)}
+                            </div>
+                          )}
+                          {handover.timeline.confirmed_at && (
+                            <div>
+                              <span className="font-medium">Confirmed:</span> {formatDate(handover.timeline.confirmed_at)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

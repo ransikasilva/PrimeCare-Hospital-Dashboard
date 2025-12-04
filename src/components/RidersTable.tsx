@@ -235,12 +235,13 @@ export function RidersTable() {
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <colgroup>
-            <col style={{ width: '25%' }} />
-            <col style={{ width: '15%' }} />
+            <col style={{ width: '22%' }} />
             <col style={{ width: '12%' }} />
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '12%' }} />
-            <col style={{ width: '24%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '16%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '20%' }} />
           </colgroup>
           <thead className="bg-gradient-to-r from-indigo-50 to-purple-50">
             <tr>
@@ -257,6 +258,9 @@ export function RidersTable() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Assigned Centers
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Daily KM
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -267,7 +271,7 @@ export function RidersTable() {
           <tbody className="bg-white divide-y divide-gray-200">
             {riders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                   No riders found
                 </td>
               </tr>
@@ -285,7 +289,8 @@ export function RidersTable() {
                           onError={(e) => {
                             // Fallback to initials if image fails to load
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling!.style.display = 'flex';
+                            const nextEl = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (nextEl) nextEl.style.display = 'flex';
                           }}
                         />
                       ) : null}
@@ -324,6 +329,36 @@ export function RidersTable() {
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(rider.status === 'pending' ? 'Pending Approval' : 'Active')}`}>
                       {rider.status === 'pending' ? 'Pending Approval' : rider.status === 'approved' ? 'Active' : rider.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {rider.assigned_centers && rider.assigned_centers.length > 0 ? (
+                      <div className="flex items-center gap-1 group relative">
+                        <span className="px-2 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                          {rider.assigned_centers[0].center_name}
+                        </span>
+                        {rider.assigned_centers.length > 1 && (
+                          <>
+                            <span className="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 border border-purple-300 cursor-help">
+                              +{rider.assigned_centers.length - 1}
+                            </span>
+                            {/* Tooltip with all centers */}
+                            <div className="absolute left-0 top-full mt-1 hidden group-hover:block z-50 bg-white border border-purple-200 rounded-lg shadow-lg p-3 min-w-[200px]">
+                              <div className="text-xs font-semibold text-gray-700 mb-2">All Assigned Centers:</div>
+                              <div className="space-y-1">
+                                {rider.assigned_centers.map((center: any, idx: number) => (
+                                  <div key={center.center_id} className="flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                    <span className="text-xs text-gray-900">{center.center_name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">None</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className="px-2 py-1 text-xs font-medium rounded bg-teal-50 text-teal-700">

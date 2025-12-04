@@ -658,6 +658,48 @@ class ApiClient {
   }) {
     return this.sendBulkSms(data);
   }
+
+  // Rider-Center Assignment Management
+  async assignRiderToCenter(riderId: string, centerId: string) {
+    return this.request('/api/rider-center-assignments/assign', {
+      method: 'POST',
+      body: JSON.stringify({ rider_id: riderId, center_id: centerId }),
+    });
+  }
+
+  async removeRiderFromCenter(riderId: string, centerId: string) {
+    return this.request('/api/rider-center-assignments/remove', {
+      method: 'POST',
+      body: JSON.stringify({ rider_id: riderId, center_id: centerId }),
+    });
+  }
+
+  async bulkAssignRiders(riderIds: string[], centerId: string) {
+    return this.request('/api/rider-center-assignments/bulk-assign', {
+      method: 'POST',
+      body: JSON.stringify({ rider_ids: riderIds, center_id: centerId }),
+    });
+  }
+
+  async getRidersForCenter(centerId: string) {
+    return this.request<any[]>(`/api/rider-center-assignments/center/${centerId}/riders`);
+  }
+
+  async getCentersForRider(riderId: string) {
+    return this.request<any[]>(`/api/rider-center-assignments/rider/${riderId}/centers`);
+  }
+
+  async getHospitalAssignments() {
+    return this.request<any[]>('/api/rider-center-assignments/hospital/assignments');
+  }
+
+  async getUnassignedRidersForCenter(centerId: string) {
+    return this.request<any[]>(`/api/rider-center-assignments/center/${centerId}/unassigned-riders`);
+  }
+
+  async getHospitalAssignmentStats() {
+    return this.request<any>('/api/rider-center-assignments/hospital/stats');
+  }
 }
 
 export const apiClient = new ApiClient(API_URL);

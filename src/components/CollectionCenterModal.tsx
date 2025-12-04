@@ -16,7 +16,10 @@ import {
   AlertTriangle,
   Package,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Users,
+  Plus,
+  Trash2
 } from "lucide-react";
 import apiClient from '@/lib/api';
 
@@ -62,6 +65,9 @@ export function CollectionCenterModal({
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'details' | 'orders' | 'riders'>('details');
+
   // Orders state
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
@@ -76,9 +82,16 @@ export function CollectionCenterModal({
   });
   const [orderStatus, setOrderStatus] = useState('all');
 
+  // Riders state
+  const [assignedRiders, setAssignedRiders] = useState<any[]>([]);
+  const [unassignedRiders, setUnassignedRiders] = useState<any[]>([]);
+  const [loadingRiders, setLoadingRiders] = useState(false);
+  const [showAddRiderModal, setShowAddRiderModal] = useState(false);
+  const [selectedRidersToAdd, setSelectedRidersToAdd] = useState<string[]>([]);
+
   // Fetch orders for the collection center
   const fetchOrders = async () => {
-    if (!center || !showOrdersSection) return;
+    if (!center) return;
 
     setLoadingOrders(true);
     try {
@@ -110,10 +123,110 @@ export function CollectionCenterModal({
   };
 
   useEffect(() => {
-    if (showOrdersSection) {
+    if (activeTab === 'orders') {
       fetchOrders();
     }
-  }, [showOrdersSection, startDate, endDate, orderStatus, center?.id]);
+  }, [activeTab, startDate, endDate, orderStatus, center?.id]);
+
+  // Fetch riders for the collection center
+  const fetchRiders = async () => {
+    if (!center) return;
+
+    setLoadingRiders(true);
+    try {
+      const [assignedResponse, unassignedResponse] = await Promise.all([
+        apiClient.getRidersForCenter(center.id),
+        apiClient.getUnassignedRidersForCenter(center.id)
+      ]);
+
+      if (assignedResponse.success && assignedResponse.data) {
+        // API returns { center_id, total_riders, riders: [...] }
+        const ridersData = Array.isArray(assignedResponse.data)
+          ? assignedResponse.data
+          : (assignedResponse.data as any).riders || [];
+        setAssignedRiders(Array.isArray(ridersData) ? ridersData : []);
+      } else {
+        setAssignedRiders([]);
+      }
+
+      if (unassignedResponse.success && unassignedResponse.data) {
+        // API returns { center_id, total_unassigned, riders: [...] }
+        const ridersData = Array.isArray(unassignedResponse.data)
+          ? unassignedResponse.data
+          : (unassignedResponse.data as any).riders || [];
+        setUnassignedRiders(Array.isArray(ridersData) ? ridersData : []);
+      } else {
+        setUnassignedRiders([]);
+      }
+    } catch (error) {
+      console.error('Error fetching riders:', error);
+      setAssignedRiders([]);
+      setUnassignedRiders([]);
+    } finally {
+      setLoadingRiders(false);
+    }
+  };
+
+  const handleAssignRider = async (riderId: string) => {
+    if (!center) return;
+
+    try {
+      const response = await apiClient.assignRiderToCenter(riderId, center.id);
+      if (response.success) {
+        await fetchRiders();
+        setSelectedRidersToAdd([]);
+      } else {
+        alert(response.message || 'Failed to assign rider');
+      }
+    } catch (error) {
+      console.error('Error assigning rider:', error);
+      alert('Failed to assign rider');
+    }
+  };
+
+  const handleRemoveRider = async (riderId: string) => {
+    if (!center) return;
+
+    if (!confirm('Are you sure you want to remove this rider from this collection center?')) {
+      return;
+    }
+
+    try {
+      const response = await apiClient.removeRiderFromCenter(riderId, center.id);
+      if (response.success) {
+        await fetchRiders();
+      } else {
+        alert(response.message || 'Failed to remove rider');
+      }
+    } catch (error) {
+      console.error('Error removing rider:', error);
+      alert('Failed to remove rider');
+    }
+  };
+
+  const handleBulkAssign = async () => {
+    if (!center || selectedRidersToAdd.length === 0) return;
+
+    try {
+      const response = await apiClient.bulkAssignRiders(selectedRidersToAdd, center.id);
+      if (response.success) {
+        await fetchRiders();
+        setSelectedRidersToAdd([]);
+        setShowAddRiderModal(false);
+      } else {
+        alert(response.message || 'Failed to assign riders');
+      }
+    } catch (error) {
+      console.error('Error bulk assigning riders:', error);
+      alert('Failed to assign riders');
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'riders') {
+      fetchRiders();
+    }
+  }, [activeTab, center?.id]);
 
   if (!isOpen || !center) return null;
 
@@ -275,9 +388,66 @@ export function CollectionCenterModal({
             </div>
           </div>
 
+          {/* Tabs Navigation */}
+          <div className="border-b border-gray-200 bg-gray-50">
+            <div className="flex space-x-1 px-8">
+              <button
+                onClick={() => setActiveTab('details')}
+                className={`px-6 py-4 font-semibold transition-all duration-200 border-b-2 ${
+                  activeTab === 'details'
+                    ? 'border-teal-500 text-teal-600 bg-white'
+                    : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>Details</span>
+                </div>
+              </button>
+
+              {center.status === "approved" && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('orders')}
+                    className={`px-6 py-4 font-semibold transition-all duration-200 border-b-2 ${
+                      activeTab === 'orders'
+                        ? 'border-teal-500 text-teal-600 bg-white'
+                        : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Package className="w-5 h-5" />
+                      <span>Orders</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('riders')}
+                    className={`px-6 py-4 font-semibold transition-all duration-200 border-b-2 ${
+                      activeTab === 'riders'
+                        ? 'border-teal-500 text-teal-600 bg-white'
+                        : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-5 h-5" />
+                      <span>Riders</span>
+                      {assignedRiders.length > 0 && (
+                        <span className="ml-1 px-2 py-0.5 text-xs bg-teal-100 text-teal-700 rounded-full">
+                          {assignedRiders.length}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
           {/* Content */}
           <div className="p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {activeTab === 'details' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Contact Information */}
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Contact Information</h3>
@@ -393,25 +563,11 @@ export function CollectionCenterModal({
                 </div>
               </div>
             </div>
+            )}
 
-            {/* Orders Section */}
-            {center.status === "approved" && (
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <Package className="w-6 h-6 text-teal-600" />
-                    <h3 className="text-xl font-bold text-gray-800">Orders History</h3>
-                  </div>
-
-                  <button
-                    onClick={() => setShowOrdersSection(!showOrdersSection)}
-                    className="px-4 py-2 text-sm font-medium text-teal-600 bg-teal-50 border border-teal-200 rounded-lg hover:bg-teal-100 transition-colors duration-200"
-                  >
-                    {showOrdersSection ? 'Hide Orders' : 'View Orders'}
-                  </button>
-                </div>
-
-                {showOrdersSection && (
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <div>
                   <div className="space-y-4">
                     {/* Date and Status Filters */}
                     <div className="bg-gray-50 p-4 rounded-lg border">
@@ -540,6 +696,241 @@ export function CollectionCenterModal({
                           </table>
                         </div>
                       )}
+                    </div>
+                  </div>
+              </div>
+            )}
+
+            {/* Riders Tab */}
+            {activeTab === 'riders' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-800">Assigned Riders</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Riders assigned to this collection center ({assignedRiders.length})
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowAddRiderModal(true)}
+                    className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200 flex items-center space-x-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Add Riders</span>
+                  </button>
+                </div>
+
+                {loadingRiders ? (
+                  <div className="p-8 text-center">
+                    <RefreshCw className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
+                    <p className="text-gray-500">Loading riders...</p>
+                  </div>
+                ) : assignedRiders.length === 0 ? (
+                  <div className="p-8 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 font-medium mb-2">No riders assigned yet</p>
+                    <p className="text-gray-500 text-sm mb-4">
+                      Assign riders to this collection center to handle pickups
+                    </p>
+                    <button
+                      onClick={() => setShowAddRiderModal(true)}
+                      className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors duration-200 inline-flex items-center space-x-2"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Add First Rider</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {assignedRiders.map((rider: any) => (
+                      <div
+                        key={rider.rider_id}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-all duration-200"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {rider.profile_picture ? (
+                              <img
+                                src={rider.profile_picture}
+                                alt={rider.rider_name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-teal-200"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                                <User className="w-6 h-6 text-teal-600" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold text-gray-800">{rider.rider_name}</p>
+                              <p className="text-xs text-gray-500">{rider.phone}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRemoveRider(rider.rider_id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                            title="Remove rider"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Status:</span>
+                            <span className={`font-medium ${
+                              rider.assignment_status === 'active' ? 'text-green-600' : 'text-gray-600'
+                            }`}>
+                              {rider.assignment_status === 'active' ? 'Active' : rider.assignment_status}
+                            </span>
+                          </div>
+                          {rider.total_pickups > 0 && (
+                            <>
+                              <div className="flex justify-between">
+                                <span className="text-gray-500">Total Pickups:</span>
+                                <span className="font-medium text-gray-800">{rider.total_pickups}</span>
+                              </div>
+                              {rider.avg_pickup_time_minutes && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Avg Time:</span>
+                                  <span className="font-medium text-gray-800">
+                                    {Math.round(rider.avg_pickup_time_minutes)} min
+                                  </span>
+                                </div>
+                              )}
+                              {rider.rating && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-500">Rating:</span>
+                                  <span className="font-medium text-yellow-600">
+                                    ⭐ {Number(rider.rating).toFixed(1)}
+                                  </span>
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <div className="flex justify-between pt-2 border-t border-gray-100">
+                            <span className="text-gray-500">Assigned:</span>
+                            <span className="text-xs text-gray-600">
+                              {new Date(rider.assigned_at).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Rider Modal */}
+                {showAddRiderModal && (
+                  <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div
+                      className="fixed inset-0 transition-all duration-300"
+                      style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)'
+                      }}
+                      onClick={() => {
+                        setShowAddRiderModal(false);
+                        setSelectedRidersToAdd([]);
+                      }}
+                    />
+                    <div className="flex min-h-full items-center justify-center p-4">
+                      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl">
+                        <div className="p-6 border-b border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-800">Add Riders to Collection Center</h3>
+                            <button
+                              onClick={() => {
+                                setShowAddRiderModal(false);
+                                setSelectedRidersToAdd([]);
+                              }}
+                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-6 max-h-96 overflow-y-auto">
+                          {unassignedRiders.length === 0 ? (
+                            <div className="text-center py-8">
+                              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-gray-600">All riders are already assigned to this center</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              {unassignedRiders.map((rider: any) => (
+                                <label
+                                  key={rider.id}
+                                  className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-teal-300 cursor-pointer transition-all"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedRidersToAdd.includes(rider.id)}
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setSelectedRidersToAdd([...selectedRidersToAdd, rider.id]);
+                                      } else {
+                                        setSelectedRidersToAdd(selectedRidersToAdd.filter(id => id !== rider.id));
+                                      }
+                                    }}
+                                    className="w-5 h-5 text-teal-600 rounded focus:ring-2 focus:ring-teal-500"
+                                  />
+                                  {rider.profile_picture ? (
+                                    <img
+                                      src={rider.profile_picture}
+                                      alt={rider.full_name || rider.rider_name}
+                                      className="ml-3 w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                                    />
+                                  ) : (
+                                    <div className="ml-3 w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center">
+                                      <User className="w-6 h-6 text-teal-600" />
+                                    </div>
+                                  )}
+                                  <div className="ml-4 flex-1">
+                                    <p className="font-semibold text-gray-800">{rider.full_name || rider.rider_name}</p>
+                                    <p className="text-sm text-gray-500">{rider.phone}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className={`text-xs font-medium px-3 py-1 rounded-full ${
+                                      rider.availability_status === 'available'
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-yellow-100 text-yellow-700'
+                                    }`}>
+                                      {rider.availability_status}
+                                    </p>
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {unassignedRiders.length > 0 && (
+                          <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+                            <button
+                              onClick={() => {
+                                setShowAddRiderModal(false);
+                                setSelectedRidersToAdd([]);
+                              }}
+                              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleBulkAssign}
+                              disabled={selectedRidersToAdd.length === 0}
+                              className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Add {selectedRidersToAdd.length > 0 && `(${selectedRidersToAdd.length})`} Riders
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
