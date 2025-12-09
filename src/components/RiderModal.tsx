@@ -720,41 +720,47 @@ export function RiderModal({
             </div>
 
             {/* Action Buttons */}
-            {(rider.status === "pending" || rider.status === "pending_hospital_approval") && (
+            {(rider.status === "pending" || rider.status === "pending_hospital_approval" || rider.status === "approved" || rider.status === "rejected") && (
               <div className="mt-8 pt-6 border-t border-gray-200">
                 {!showRejectForm ? (
                   <div className="flex justify-end space-x-4">
-                    <button
-                      onClick={() => setShowRejectForm(true)}
-                      disabled={isProcessing}
-                      className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
-                      style={{
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff',
-                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)'
-                      }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <XCircle className="w-5 h-5" />
-                        <span>Reject Rider</span>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={handleApprove}
-                      disabled={isProcessing}
-                      className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
-                      style={{
-                        backgroundColor: '#10b981',
-                        color: '#ffffff',
-                        boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
-                      }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span>{isProcessing ? 'Approving...' : 'Approve Rider'}</span>
-                      </div>
-                    </button>
+                    {/* Show Reject button only if not already rejected */}
+                    {rider.status !== "rejected" && (
+                      <button
+                        onClick={() => setShowRejectForm(true)}
+                        disabled={isProcessing}
+                        className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                          boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)'
+                        }}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <XCircle className="w-5 h-5" />
+                          <span>Reject Rider</span>
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Show Approve button only if not already approved */}
+                    {rider.status !== "approved" && (
+                      <button
+                        onClick={handleApprove}
+                        disabled={isProcessing}
+                        className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: '#ffffff',
+                          boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+                        }}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span>{isProcessing ? 'Approving...' : 'Approve Rider'}</span>
+                        </div>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">

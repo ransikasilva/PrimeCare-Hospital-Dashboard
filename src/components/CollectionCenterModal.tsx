@@ -938,41 +938,47 @@ export function CollectionCenterModal({
             )}
 
             {/* Action Buttons */}
-            {center.status === "pending_hospital_approval" && (
+            {(center.status === "pending_hospital_approval" || center.status === "pending_hq_approval" || center.status === "approved" || center.status === "rejected") && (
               <div className="mt-8 pt-6 border-t border-gray-200">
                 {!showRejectForm ? (
                   <div className="flex justify-end space-x-4">
-                    <button
-                      onClick={() => setShowRejectForm(true)}
-                      disabled={isProcessing}
-                      className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
-                      style={{
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff',
-                        boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)'
-                      }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <XCircle className="w-5 h-5" />
-                        <span>Reject Center</span>
-                      </div>
-                    </button>
-                    
-                    <button
-                      onClick={handleApprove}
-                      disabled={isProcessing}
-                      className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
-                      style={{
-                        backgroundColor: '#10b981',
-                        color: '#ffffff',
-                        boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
-                      }}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span>{isProcessing ? 'Approving...' : 'Approve Center'}</span>
-                      </div>
-                    </button>
+                    {/* Show Reject button only if not already rejected */}
+                    {center.status !== "rejected" && (
+                      <button
+                        onClick={() => setShowRejectForm(true)}
+                        disabled={isProcessing}
+                        className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: '#ffffff',
+                          boxShadow: '0 8px 32px rgba(239, 68, 68, 0.3)'
+                        }}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <XCircle className="w-5 h-5" />
+                          <span>Reject Center</span>
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Show Approve button only if not already approved or pending HQ approval */}
+                    {center.status !== "approved" && center.status !== "pending_hq_approval" && (
+                      <button
+                        onClick={handleApprove}
+                        disabled={isProcessing}
+                        className="px-6 py-3 rounded-2xl font-semibold transition-all duration-200 hover:transform hover:scale-105 disabled:opacity-50"
+                        style={{
+                          backgroundColor: '#10b981',
+                          color: '#ffffff',
+                          boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3)'
+                        }}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span>{isProcessing ? 'Approving...' : 'Approve Center'}</span>
+                        </div>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">

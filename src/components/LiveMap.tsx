@@ -17,6 +17,7 @@ interface Rider {
   rider_name: string;
   phone: string;
   availability_status: 'available' | 'busy' | 'offline';
+  vehicle_type?: string;
   current_location?: {
     lat: number;
     lng: number;
@@ -78,8 +79,9 @@ export function LiveMap() {
   // Extract collection centers safely with memoization - try multiple data sources
   const collectionCenters: CollectionCenter[] = useMemo(() => {
     // Try the hospital dashboard data first (this has Elite Medical!)
-    if (dashboardData?.data?.collection_centers) {
-      const dashboardCenters = dashboardData.data.collection_centers.filter((center: any) => 
+    const dashData = dashboardData?.data as any;
+    if (dashData?.collection_centers) {
+      const dashboardCenters = dashData.collection_centers.filter((center: any) =>
         center.coordinates_lat && center.coordinates_lng
       );
       console.log('LiveMap - Found centers in dashboard data:', dashboardCenters.length, dashboardCenters);
@@ -306,12 +308,12 @@ export function LiveMap() {
 
     // Add markers for riders with locations
     riders.forEach((rider) => {
-      console.log('LiveMap - Processing rider:', rider.rider_name, rider.current_location);
+      console.log('LiveMap - Processing rider:', rider.rider_name, rider.current_location, 'Vehicle:', rider.vehicle_type);
       if (!rider.current_location) return;
 
       const { lat, lng } = rider.current_location;
-      
-      // Choose marker color and emoji based on status
+
+      // Choose marker color based on status
       let markerColor = '#6B7280'; // gray for offline
       let statusBadge = 'bg-gray-100 text-gray-800';
       if (rider.availability_status === 'available') {
@@ -323,6 +325,22 @@ export function LiveMap() {
         statusBadge = 'bg-teal-100 text-teal-800';
       }
 
+      // Choose vehicle emoji based on vehicle_type
+      let vehicleEmoji = '🏍️'; // default motorcycle
+      const vehicleType = rider.vehicle_type?.toLowerCase() || '';
+      if (vehicleType.includes('car')) {
+        vehicleEmoji = '🚗';
+      } else if (vehicleType.includes('van')) {
+        vehicleEmoji = '🚐';
+      } else if (vehicleType.includes('three-wheeler') || vehicleType.includes('tuk')) {
+        vehicleEmoji = '🛺';
+      } else if (vehicleType.includes('truck')) {
+        vehicleEmoji = '🚚';
+      } else if (vehicleType.includes('bike') || vehicleType.includes('bicycle')) {
+        vehicleEmoji = '🚴';
+      }
+      // motorcycle remains default for 'motorcycle' or unknown types
+
       const marker = new window.google.maps.Marker({
         position: { lat, lng },
         map: map,
@@ -331,7 +349,7 @@ export function LiveMap() {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
               <circle cx="16" cy="16" r="14" fill="${markerColor}" stroke="#FFFFFF" stroke-width="2"/>
-              <text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="10" font-weight="bold">🏍️</text>
+              <text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="10" font-weight="bold">${vehicleEmoji}</text>
             </svg>
           `),
           scaledSize: new window.google.maps.Size(32, 32),
@@ -344,13 +362,17 @@ export function LiveMap() {
         content: `
           <div class="p-3 min-w-48">
             <div class="flex items-center mb-2">
-              <span class="text-2xl mr-2">🏍️</span>
+              <span class="text-2xl mr-2">${vehicleEmoji}</span>
               <h3 class="font-bold text-gray-900 text-lg">${rider.rider_name}</h3>
             </div>
             <div class="space-y-1 text-sm">
               <div class="flex items-center">
                 <span class="w-16 text-gray-600">Phone:</span>
                 <span class="font-medium">${rider.phone}</span>
+              </div>
+              <div class="flex items-center">
+                <span class="w-16 text-gray-600">Vehicle:</span>
+                <span class="font-medium">${rider.vehicle_type || 'Motorcycle'}</span>
               </div>
               <div class="flex items-center">
                 <span class="w-16 text-gray-600">Status:</span>
@@ -584,28 +606,42 @@ export function LiveMap() {
           {riders.length > 0 && (
             <div>
               <h4 className="font-medium text-gray-900 mb-2">🏍️ Riders</h4>
-              {riders.map((rider) => (
-                <div key={rider.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
-                  <div>
-                    <p className="font-medium text-gray-900">{rider.rider_name}</p>
-                    <p className="text-sm text-gray-600">{rider.phone}</p>
-                    {rider.current_location && (
-                      <p className="text-xs text-gray-500">
-                        GPS: {rider.current_location.lat.toFixed(4)}, {rider.current_location.lng.toFixed(4)}
-                      </p>
-                    )}
+              {riders.map((rider) => {
+                let vehicleEmoji = '🏍️';
+                const vehicleType = rider.vehicle_type?.toLowerCase() || '';
+                if (vehicleType.includes('car')) vehicleEmoji = '🚗';
+                else if (vehicleType.includes('van')) vehicleEmoji = '🚐';
+                else if (vehicleType.includes('three-wheeler') || vehicleType.includes('tuk')) vehicleEmoji = '🛺';
+                else if (vehicleType.includes('truck')) vehicleEmoji = '🚚';
+                else if (vehicleType.includes('bike') || vehicleType.includes('bicycle')) vehicleEmoji = '🚴';
+
+                return (
+                  <div key={rider.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{vehicleEmoji}</span>
+                        <p className="font-medium text-gray-900">{rider.rider_name}</p>
+                      </div>
+                      <p className="text-sm text-gray-600">{rider.phone}</p>
+                      <p className="text-xs text-gray-500">{rider.vehicle_type || 'Motorcycle'}</p>
+                      {rider.current_location && (
+                        <p className="text-xs text-gray-500">
+                          GPS: {rider.current_location.lat.toFixed(4)}, {rider.current_location.lng.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
+                        rider.availability_status === 'available' ? 'bg-green-500' :
+                        rider.availability_status === 'busy' ? 'bg-teal-500' : 'bg-gray-500'
+                      }`}></span>
+                      <span className="text-sm font-medium">
+                        {rider.availability_status?.charAt(0).toUpperCase() + rider.availability_status?.slice(1)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
-                      rider.availability_status === 'available' ? 'bg-green-500' :
-                      rider.availability_status === 'busy' ? 'bg-teal-500' : 'bg-gray-500'
-                    }`}></span>
-                    <span className="text-sm font-medium">
-                      {rider.availability_status?.charAt(0).toUpperCase() + rider.availability_status?.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
