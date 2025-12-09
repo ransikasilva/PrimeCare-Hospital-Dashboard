@@ -80,7 +80,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <OrdersTable />
+      <OrdersTable priorityFilter={priorityFilter} statusFilter={statusFilter} />
     </div>
   );
 }

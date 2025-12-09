@@ -16,38 +16,8 @@ interface LiveAlertsProps {
 }
 
 export function LiveAlerts({ data, filter }: LiveAlertsProps) {
-  const defaultAlerts: Alert[] = [
-    {
-      id: '1',
-      order_id: 'ORD-2024-001',
-      type: 'Critical',
-      title: 'Delayed delivery',
-      message: 'Sample pickup delayed by 15 minutes',
-      timestamp: '10:45 AM',
-      priority: 'high'
-    },
-    {
-      id: '2',
-      order_id: 'ORD-2024-002',
-      type: 'Warning',
-      title: 'Near-miss delivery time',
-      message: 'Delivery approaching deadline',
-      timestamp: '10:30 AM',
-      priority: 'medium'
-    },
-    {
-      id: '3',
-      order_id: 'ORD-2024-003',
-      type: 'Info',
-      title: 'New order received',
-      message: 'Emergency sample collection required',
-      timestamp: '10:15 AM',
-      priority: 'low'
-    }
-  ];
-
-  // Ensure data is an array
-  const alerts = Array.isArray(data) ? data : defaultAlerts;
+  // Use only real data from the API - no mock data
+  const alerts = Array.isArray(data) ? data : [];
   const filteredAlerts = filter === 'All' ? alerts : alerts.filter(alert => alert.type === filter);
 
   const getAlertStyles = (type: Alert['type']) => {

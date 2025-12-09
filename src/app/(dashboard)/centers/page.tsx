@@ -23,13 +23,16 @@ export default function CentersPage() {
   
   // Separate for display counts
   const activeCenters = centers.filter(c => c.status === 'approved' || c.status === 'active');
-  const pendingApprovalCenters = centers.filter(c => 
+  const pendingApprovalCenters = centers.filter(c =>
     c.status === 'pending_hospital_approval' || c.status === 'pending_hq_approval'
   );
-  const totalCenters = centers.length;
-  
-  const dependentCenters = centers.filter((c: any) => c.center_type === 'dependent').length;
-  const independentCenters = centers.filter((c: any) => c.center_type === 'independent').length;
+  const rejectedCenters = centers.filter(c => c.status === 'rejected');
+
+  // Only count non-rejected centers for center types
+  const nonRejectedCenters = centers.filter((c: any) => c.status !== 'rejected');
+  const dependentCenters = nonRejectedCenters.filter((c: any) => c.center_type === 'dependent').length;
+  const independentCenters = nonRejectedCenters.filter((c: any) => c.center_type === 'independent').length;
+  const totalCenters = nonRejectedCenters.length; // Total should match dependent + independent
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -71,7 +74,7 @@ export default function CentersPage() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Rejected</span>
-              <span className="font-semibold text-red-600">0</span>
+              <span className="font-semibold text-red-600">{rejectedCenters.length}</span>
             </div>
           </div>
         </div>

@@ -4,12 +4,17 @@ import { QrCode, Eye } from "lucide-react";
 import { QRModal } from "./QRModal";
 import { EnhancedOrderDetailModal } from "./modals/EnhancedOrderDetailModal";
 
-export function OrdersTable() {
+interface OrdersTableProps {
+  priorityFilter?: string;
+  statusFilter?: string;
+}
+
+export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status" }: OrdersTableProps = {}) {
   const filters = useMemo(() => ({ status: "active", limit: 10 }), []);
   const { data: ordersResponse, loading, error } = useOrders(filters);
   // Deduplicate orders that may have multiple QR codes
   const rawOrders = Array.isArray((ordersResponse?.data as any)?.orders) ? (ordersResponse?.data as any).orders : [];
-  const orders = rawOrders.reduce((unique: any[], order: any) => {
+  const deduplicatedOrders = rawOrders.reduce((unique: any[], order: any) => {
     const existingIndex = unique.findIndex(u => u.id === order.id);
     if (existingIndex === -1) {
       // First time seeing this order - add it
@@ -18,6 +23,22 @@ export function OrdersTable() {
     // If duplicate, ignore it (keep the first occurrence)
     return unique;
   }, []);
+
+  // Apply filters
+  const orders = useMemo(() => {
+    return deduplicatedOrders.filter((order: any) => {
+      // Filter by priority
+      const priorityMatch = priorityFilter === "All Priorities" ||
+        order.urgency?.toLowerCase() === priorityFilter.toLowerCase();
+
+      // Filter by status
+      const statusMatch = statusFilter === "All Status" || statusFilter === "" ||
+        order.status === statusFilter;
+
+      return priorityMatch && statusMatch;
+    });
+  }, [deduplicatedOrders, priorityFilter, statusFilter]);
+
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);

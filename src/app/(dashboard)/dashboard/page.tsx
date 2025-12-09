@@ -50,41 +50,6 @@ interface Alert {
 
 // This will be replaced with real alerts from API
 
-const quickActions = [
-  {
-    icon: Building2,
-    title: 'Manage Centers',
-    description: 'Add new collection center',
-    link: '/centers',
-    gradient: ['#4ECDC4', '#4A9BC7'],
-    count: '12 Active'
-  },
-  {
-    icon: FileText,
-    title: 'Manage Orders',
-    description: 'Manual order entry',
-    link: '/orders',
-    gradient: ['#4ECDC4', '#6BB6E8'],
-    count: '18 Today'
-  },
-  {
-    icon: Users,
-    title: 'Manage Riders',
-    description: 'Rider assignments',
-    link: '/riders',
-    gradient: ['#4ECDC4', '#4FA5D8'],
-    count: '8 Available'
-  },
-  {
-    icon: BarChart3,
-    title: 'View Reports',
-    description: 'Analytics & insights',
-    link: '/reports',
-    gradient: ['#4ECDC4', '#7BBFEA'],
-    count: '96% SLA'
-  }
-];
-
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { user } = useAuth();
@@ -92,7 +57,10 @@ export default function DashboardPage() {
   const { data: hospitalsData } = useMyHospitals();
   const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
   const { data: pendingData } = usePendingApprovals(hospitalId || '');
-  
+
+  // Get real metrics from dashboard data
+  const metrics = (dashboardData?.data as any)?.metrics || {};
+
   // Extract collection centers and alerts from real data, remove duplicates by ID
   const collectionCentersRaw = (dashboardData?.data as any)?.collection_centers || [];
   const alertsRaw = (dashboardData?.data as any)?.alerts || [];
@@ -101,6 +69,42 @@ export default function DashboardPage() {
   const collectionCenters = collectionCentersRaw.filter((center: any, index: number, self: any[]) =>
     index === self.findIndex((c: any) => c.id === center.id)
   );
+
+  // Create quickActions with real data
+  const quickActions = [
+    {
+      icon: Building2,
+      title: 'Manage Centers',
+      description: 'Add new collection center',
+      link: '/centers',
+      gradient: ['#4ECDC4', '#4A9BC7'],
+      count: `${collectionCenters.length} Active`
+    },
+    {
+      icon: FileText,
+      title: 'Manage Orders',
+      description: 'Manual order entry',
+      link: '/orders',
+      gradient: ['#4ECDC4', '#6BB6E8'],
+      count: `${metrics?.completed_today?.value || 0} Today`
+    },
+    {
+      icon: Users,
+      title: 'Manage Riders',
+      description: 'Rider assignments',
+      link: '/riders',
+      gradient: ['#4ECDC4', '#4FA5D8'],
+      count: `${metrics?.available_riders?.value || 0} Available`
+    },
+    {
+      icon: BarChart3,
+      title: 'View Reports',
+      description: 'Analytics & insights',
+      link: '/reports',
+      gradient: ['#4ECDC4', '#7BBFEA'],
+      count: `${metrics?.sla_compliance?.value || 0}% SLA`
+    }
+  ];
   const alerts = alertsRaw.filter((alert: any, index: number, self: any[]) =>
     index === self.findIndex((a: any) => a.id === alert.id)
   );

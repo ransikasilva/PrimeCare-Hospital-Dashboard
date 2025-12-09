@@ -142,6 +142,19 @@ export function RidersTable() {
     setSelectedRider(null);
   };
 
+  const getAvailabilityColor = (availability: string) => {
+    switch (availability?.toLowerCase()) {
+      case "available":
+        return "bg-green-100 text-green-800 border border-green-200";
+      case "busy":
+        return "bg-orange-100 text-orange-800 border border-orange-200";
+      case "offline":
+        return "bg-gray-100 text-gray-800 border border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-500 border border-gray-200";
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
@@ -260,6 +273,9 @@ export function RidersTable() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Availability
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Assigned Centers
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -273,7 +289,7 @@ export function RidersTable() {
           <tbody className="bg-white divide-y divide-gray-200">
             {riders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                   No riders found
                 </td>
               </tr>
@@ -339,6 +355,20 @@ export function RidersTable() {
                        rider.status === 'rejected' ? 'Rejected' :
                        rider.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${
+                        rider.availability_status === 'available' ? 'bg-green-500' :
+                        rider.availability_status === 'busy' ? 'bg-orange-500' :
+                        'bg-gray-400'
+                      }`}></span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getAvailabilityColor(rider.availability_status || 'offline')}`}>
+                        {rider.availability_status === 'available' ? 'Online' :
+                         rider.availability_status === 'busy' ? 'Busy' :
+                         'Offline'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {rider.assigned_centers && rider.assigned_centers.length > 0 ? (

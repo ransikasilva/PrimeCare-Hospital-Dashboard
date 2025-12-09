@@ -487,32 +487,26 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       </div>
                     </div>
                   ) : (
-                    // Normal delivery - show 3 distance cards
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    // Normal delivery - show distance info based on order status
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-teal-50 p-4 rounded-lg">
-                        <label className="text-sm text-teal-900">Pickup Distance</label>
+                        <label className="text-sm text-teal-900">Estimated Distance</label>
                         <p className="text-2xl font-bold text-teal-900 mt-1">
-                          {orderDetails.order?.pickup_distance_km
-                            ? `${orderDetails.order.pickup_distance_km.toFixed(1)} km`
-                            : 'Calculating...'}
-                        </p>
-                      </div>
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <label className="text-sm text-purple-900">Delivery Distance</label>
-                        <p className="text-2xl font-bold text-purple-900 mt-1">
-                          {orderDetails.order?.delivery_distance_km
-                            ? `${orderDetails.order.delivery_distance_km.toFixed(1)} km`
-                            : 'Calculating...'}
+                          {orderDetails.order?.estimated_distance_km
+                            ? `${orderDetails.order.estimated_distance_km.toFixed(1)} km`
+                            : 'N/A'}
                         </p>
                       </div>
                       <div className="bg-green-50 p-4 rounded-lg">
-                        <label className="text-sm text-green-900">Total Distance</label>
+                        <label className="text-sm text-green-900">
+                          {orderDetails.order?.status === 'delivered' ? 'Actual Distance' : 'Tracking Distance'}
+                        </label>
                         <p className="text-2xl font-bold text-green-900 mt-1">
-                          {orderDetails.order?.actual_distance_km
+                          {orderDetails.order?.actual_distance_km && orderDetails.order.actual_distance_km > 0
                             ? `${orderDetails.order.actual_distance_km.toFixed(1)} km`
-                            : orderDetails.order?.estimated_distance_km
-                              ? `${orderDetails.order.estimated_distance_km.toFixed(1)} km (est.)`
-                              : 'N/A'}
+                            : orderDetails.order?.status === 'delivered'
+                              ? 'Not recorded'
+                              : 'In Progress'}
                         </p>
                       </div>
                     </div>
@@ -527,57 +521,173 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                     <Activity className="w-5 h-5" />
                     Chain of Custody Timeline
                   </h3>
+                  <p className="text-sm text-gray-600">Complete tracking of who handled the sample and when</p>
 
-                  {orderDetails.qr_scans.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Activity className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                      <p className="text-gray-500">No chain of custody events recorded yet</p>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      {/* Timeline line */}
-                      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
 
-                      <div className="space-y-6">
-                        {orderDetails.qr_scans.map((scan, index) => (
-                          <div key={index} className="relative pl-14">
-                            {/* Timeline dot */}
-                            <div className="absolute left-4 top-2 w-4 h-4 bg-teal-600 rounded-full border-2 border-white shadow"></div>
+                    <div className="space-y-6">
+                      {/* 1. Sample Created at Collection Center */}
+                      <div className="relative pl-14">
+                        <div className="absolute left-4 top-2 w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow"></div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-semibold text-gray-900">Sample Created</h4>
+                              <p className="text-sm text-gray-600">Collection Center</p>
+                            </div>
+                            <span className="text-xs text-gray-500">{formatDate(orderDetails.order?.created_at)}</span>
+                          </div>
+                          <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <User className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium text-gray-900">Given by: {orderDetails.order?.center_name || 'Collection Center'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <MapPin className="w-4 h-4" />
+                              <span>{orderDetails.order?.center_name || 'Collection Center'}</span>
+                            </div>
+                            {orderDetails.order?.sample_type && (
+                              <p className="text-sm text-gray-600 mt-2">Sample Type: <span className="font-medium">{orderDetails.order.sample_type}</span></p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
 
-                            <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                              <div className="flex items-start justify-between mb-2">
-                                <div>
-                                  <h4 className="font-semibold text-gray-900 capitalize">{scan.scan_type?.replace(/_/g, ' ')}</h4>
-                                  <p className="text-sm text-gray-600">QR ID: {scan.qr_id}</p>
-                                </div>
-                                <span className="text-xs text-gray-500">{formatDate(scan.scanned_at)}</span>
+                      {/* 2. Assigned to Rider */}
+                      {orderDetails.order?.rider_name && (
+                        <div className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-teal-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Assigned to Rider</h4>
+                                <p className="text-sm text-gray-600">Rider Pickup</p>
                               </div>
-
-                              <div className="grid grid-cols-2 gap-3 text-sm mt-3">
+                              <span className="text-xs text-gray-500">{formatDate(orderDetails.order?.created_at)}</span>
+                            </div>
+                            <div className="bg-teal-50 border-l-4 border-teal-500 p-3 mt-3">
+                              <div className="flex items-center justify-between">
                                 <div>
-                                  <label className="text-gray-600">Scanned by</label>
-                                  <p className="font-medium text-gray-900">{scan.scanned_by || 'System'}</p>
-                                  {scan.scanned_by_email && (
-                                    <p className="text-xs text-gray-500">{scan.scanned_by_email}</p>
-                                  )}
-                                </div>
-                                <div>
-                                  <label className="text-gray-600">Scanner Type</label>
-                                  <p className="font-medium text-gray-900 capitalize">{scan.scanner_type || 'N/A'}</p>
-                                </div>
-                                {scan.scan_location && (
-                                  <div className="col-span-2">
-                                    <label className="text-gray-600">Location</label>
-                                    <p className="font-medium text-gray-900">{scan.scan_location}</p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <User className="w-4 h-4 text-gray-600" />
+                                    <span className="text-sm text-gray-600">From: {orderDetails.order?.center_name || 'Collection Center'}</span>
                                   </div>
-                                )}
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-teal-600" />
+                                    <User className="w-4 h-4 text-teal-600" />
+                                    <span className="font-medium text-gray-900">To: {orderDetails.order.rider_name}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                                <MapPin className="w-4 h-4" />
+                                <span>{orderDetails.order?.center_name || 'Collection Center'}</span>
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+
+                      {/* 3. QR Scans (Pickup confirmation, etc) */}
+                      {orderDetails.qr_scans.map((scan, index) => (
+                        <div key={index} className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900 capitalize">{scan.scan_type?.replace(/_/g, ' ') || 'QR Scan'}</h4>
+                                <p className="text-sm text-gray-600">Verification Checkpoint</p>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate(scan.scanned_at)}</span>
+                            </div>
+                            <div className="bg-purple-50 border-l-4 border-purple-500 p-3 mt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Scan className="w-4 h-4 text-purple-600" />
+                                <span className="font-medium text-gray-900">
+                                  Scanned by: {
+                                    scan.scanner_type === 'rider' && orderDetails.order?.rider_name
+                                      ? orderDetails.order.rider_name
+                                      : scan.scanned_by || 'System'
+                                  }
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 capitalize">Type: {scan.scanner_type || 'N/A'}</p>
+                              {scan.scan_location && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{scan.scan_location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* 4. Delivered to Hospital */}
+                      {orderDetails.order?.status === 'delivered' && (
+                        <div className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Delivered to Hospital</h4>
+                                <p className="text-sm text-gray-600">Final Destination</p>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate(orderDetails.order?.delivered_at || orderDetails.order?.updated_at)}</span>
+                            </div>
+                            <div className="bg-green-50 border-l-4 border-green-500 p-3 mt-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <User className="w-4 h-4 text-gray-600" />
+                                    <span className="text-sm text-gray-600">From: {orderDetails.order?.rider_name || 'Rider'}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-green-600" />
+                                    <User className="w-4 h-4 text-green-600" />
+                                    <span className="font-medium text-gray-900">To: Hospital Lab Staff</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                                <MapPin className="w-4 h-4" />
+                                <span>{orderDetails.order?.hospital_name || 'Hospital Lab'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-3 text-green-700 bg-green-100 rounded px-2 py-1 text-xs w-fit">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span className="font-medium">Chain of Custody Complete</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Show if still in transit */}
+                      {orderDetails.order?.status !== 'delivered' && orderDetails.order?.rider_name && (
+                        <div className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-yellow-600 rounded-full border-2 border-white shadow animate-pulse"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">In Transit</h4>
+                                <p className="text-sm text-gray-600">Sample being transported</p>
+                              </div>
+                              <span className="text-xs text-gray-500">Current Status</span>
+                            </div>
+                            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 mt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Truck className="w-4 h-4 text-yellow-600" />
+                                <span className="font-medium text-gray-900">With: {orderDetails.order.rider_name}</span>
+                              </div>
+                              <p className="text-sm text-gray-600">En route to {orderDetails.order?.hospital_name || 'Hospital'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               )}
 

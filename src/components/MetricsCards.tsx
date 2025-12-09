@@ -134,7 +134,7 @@ function ProgressRing({ percentage, size = 60, strokeWidth = 6, gradient }: {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xs font-bold text-gray-600">{percentage}%</span>
+        <span className="text-xs font-bold text-gray-600">{Math.round(percentage)}%</span>
       </div>
     </div>
   );
@@ -187,7 +187,7 @@ export function MetricsCards() {
     sla_compliance: { value: 0, previous_value: 0, sparkline: [0, 0, 0, 0, 0, 0, 0] }
   };
   
-  const metrics = dashboardData?.data || defaultMetrics;
+  const metrics = dashboardData?.data?.metrics || defaultMetrics;
   
   if (loading) {
     return (
@@ -238,7 +238,7 @@ export function MetricsCards() {
         const TrendIcon = getTrendIcon(status);
         const changePercentage = getChangePercentage(value, previousValue);
         const isHovered = hoveredIndex === index;
-        const completionPercentage = template.target ? Math.min((value / template.target) * 100, 100) : 0;
+        const completionPercentage = template.target ? Math.round(Math.min((value / template.target) * 100, 100)) : 0;
 
         return (
           <div

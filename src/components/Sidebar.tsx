@@ -11,22 +11,12 @@ import {
   Users,
   Building2,
   BarChart3,
-  Search,
   Settings,
   ChevronRight,
-  Activity,
-  Bell,
-  HelpCircle,
   ClipboardList,
   Shield,
   Hospital
 } from "lucide-react";
-
-const quickActions = [
-  { icon: Activity, label: "System Status", color: "#10B981" },
-  { icon: Bell, label: "Notifications", color: "#F59E0B" },
-  { icon: HelpCircle, label: "Help Center", color: "#4ECDC4" },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -292,39 +282,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Quick Actions */}
+      {/* User Status */}
       <div className="flex-shrink-0 p-4 border-t border-gray-100/60">
-        <div className="mb-4">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            Quick Actions
-          </h3>
-          <div className="flex space-x-2">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.label}
-                  className="group flex-1 flex flex-col items-center p-3 rounded-xl transition-all duration-300 hover:transform hover:scale-105"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,250,252,0.8) 100%)',
-                    border: '1px solid rgba(203, 213, 225, 0.3)',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)'
-                  }}
-                >
-                  <Icon 
-                    className="w-5 h-5 mb-1 transition-colors duration-300"
-                    style={{ color: action.color }}
-                  />
-                  <span className="text-xs font-medium text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
-                    {action.label.split(' ')[0]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* User Status */}
         <div 
           className="p-4 rounded-2xl"
           style={{

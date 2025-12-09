@@ -95,6 +95,7 @@ export default function ReportsPage() {
   const periodOrders = filteredOrders.length;
   const deliveredOrders = filteredOrders.filter((o: any) => o.status === 'delivered').length;
   const activeOrders = filteredOrders.filter((o: any) => !['delivered', 'cancelled'].includes(o.status)).length;
+  const cancelledOrders = filteredOrders.filter((o: any) => o.status === 'cancelled').length;
   
   // Calculate real average delivery time from filtered delivered orders
   const deliveredOrdersWithTime = filteredOrders.filter((o: any) => o.status === 'delivered' && o.delivered_at && o.created_at);
@@ -289,8 +290,9 @@ export default function ReportsPage() {
             <div>
               <p className="text-2xl font-bold text-gray-900">{periodOrders}</p>
               <p className="text-gray-600">Orders ({selectedPeriod})</p>
-              <p className="text-sm text-gray-500 mt-1">{deliveredOrders} delivered, {activeOrders} active</p>
-              <p className="text-xs text-green-600 mt-1">+{Math.floor(Math.random() * 10 + 3)} from previous period</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {deliveredOrders} delivered, {activeOrders} active{cancelledOrders > 0 ? `, ${cancelledOrders} cancelled` : ''}
+              </p>
             </div>
             <div className="p-2 bg-teal-100 rounded-full">
               <FileText className="w-6 h-6 text-teal-600" />
@@ -303,7 +305,6 @@ export default function ReportsPage() {
             <div>
               <p className="text-2xl font-bold text-gray-900">{avgDeliveryTime}m</p>
               <p className="text-gray-600">Avg Delivery Time</p>
-              <p className="text-sm text-green-600 mt-1">24% faster than 45min target</p>
             </div>
             <div className="p-2 bg-green-100 rounded-full">
               <TrendingUp className="w-6 h-6 text-green-600" />
@@ -317,7 +318,6 @@ export default function ReportsPage() {
               <p className="text-2xl font-bold text-gray-900">{onTimeDeliveries}%</p>
               <p className="text-gray-600">On-Time Deliveries</p>
               <p className="text-sm text-gray-500 mt-1">{deliveredOrders} of {periodOrders} orders on time</p>
-              <p className="text-xs text-orange-600 mt-1">Below 95% target</p>
             </div>
             <div className="p-2 bg-orange-100 rounded-full">
               <BarChart3 className="w-6 h-6 text-orange-600" />
@@ -331,7 +331,6 @@ export default function ReportsPage() {
               <p className="text-2xl font-bold text-gray-900">{avgRiderRating}</p>
               <p className="text-gray-600">Avg Rider Rating</p>
               <p className="text-sm text-gray-500 mt-1">Based on {deliveredOrders} completed deliveries</p>
-              <p className="text-xs text-green-600 mt-1">+0.2 from yesterday</p>
             </div>
             <div className="p-2 bg-yellow-100 rounded-full">
               <svg className="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 24 24">
