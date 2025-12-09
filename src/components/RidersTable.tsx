@@ -148,6 +148,8 @@ export function RidersTable() {
         return "bg-green-100 text-green-800 border border-green-200 shadow-sm";
       case "Pending Approval":
         return "bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm";
+      case "Rejected":
+        return "bg-red-100 text-red-800 border border-red-200 shadow-sm";
       case "Offline":
         return "bg-gray-100 text-gray-800 border border-gray-200 shadow-sm";
       default:
@@ -326,8 +328,16 @@ export function RidersTable() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(rider.status === 'pending' ? 'Pending Approval' : 'Active')}`}>
-                      {rider.status === 'pending' ? 'Pending Approval' : rider.status === 'approved' ? 'Active' : rider.status}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                      rider.status === 'pending' || rider.status === 'pending_hospital_approval' ? 'Pending Approval' :
+                      rider.status === 'approved' ? 'Active' :
+                      rider.status === 'rejected' ? 'Rejected' :
+                      'Active'
+                    )}`}>
+                      {rider.status === 'pending' || rider.status === 'pending_hospital_approval' ? 'Pending Approval' :
+                       rider.status === 'approved' ? 'Active' :
+                       rider.status === 'rejected' ? 'Rejected' :
+                       rider.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
