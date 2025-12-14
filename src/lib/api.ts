@@ -560,7 +560,7 @@ class ApiClient {
     return this.request(endpoint);
   }
 
-  async getRiderPerformanceReport(params?: {
+  async getSLAPerformanceReport(params?: {
     period?: string;
     hospital_id?: string;
   }) {
@@ -572,7 +572,7 @@ class ApiClient {
         }
       });
     }
-    
+
     const endpoint = `/api/sla/performance${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
     return this.request(endpoint);
   }
@@ -699,6 +699,30 @@ class ApiClient {
 
   async getHospitalAssignmentStats() {
     return this.request<any>('/api/rider-center-assignments/hospital/stats');
+  }
+
+  // ================================
+  // HOSPITAL REPORTS
+  // ================================
+
+  async getTransportSummary(hospitalId: string, params: string) {
+    return this.request<any>(`/api/reports/${hospitalId}/transport-summary?${params}`);
+  }
+
+  async getFinancialReport(hospitalId: string, params: string) {
+    return this.request<any>(`/api/reports/${hospitalId}/financial?${params}`);
+  }
+
+  async getTATReport(hospitalId: string, params: string) {
+    return this.request<any>(`/api/reports/${hospitalId}/tat-performance?${params}`);
+  }
+
+  async getSampleReport(hospitalId: string, params: string) {
+    return this.request<any>(`/api/reports/${hospitalId}/samples?${params}`);
+  }
+
+  async getRiderPerformanceReport(hospitalId: string, params: string) {
+    return this.request<any>(`/api/reports/${hospitalId}/rider-performance?${params}`);
   }
 }
 
