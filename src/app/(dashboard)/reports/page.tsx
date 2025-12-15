@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMyHospitals } from "@/hooks/useApi";
 import { apiClient } from "@/lib/api";
-import { Download, FileText, BarChart3, TrendingUp, DollarSign, Clock, Package, Users, AlertCircle, Calendar } from "lucide-react";
+import { Download, FileText, BarChart3, TrendingUp, DollarSign, Clock, Package, Users, AlertCircle, Calendar, Edit2 } from "lucide-react";
 
 export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("daily");
@@ -17,6 +17,7 @@ export default function ReportsPage() {
   const [tatReport, setTATReport] = useState<any>(null);
   const [sampleReport, setSampleReport] = useState<any>(null);
   const [riderPerformanceReport, setRiderPerformanceReport] = useState<any>(null);
+  const [hospitalRatePerKm, setHospitalRatePerKm] = useState<number>(50);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -55,6 +56,9 @@ export default function ReportsPage() {
           case 'financial':
             response = await apiClient.getFinancialReport(hospitalId, params.toString());
             setFinancialReport(response.data);
+            if (response.data.rate_per_km) {
+              setHospitalRatePerKm(response.data.rate_per_km);
+            }
             break;
           case 'tat':
             response = await apiClient.getTATReport(hospitalId, params.toString());
@@ -67,6 +71,11 @@ export default function ReportsPage() {
           case 'rider':
             response = await apiClient.getRiderPerformanceReport(hospitalId, params.toString());
             setRiderPerformanceReport(response.data);
+            // Also fetch rate_per_km for rider performance calculations
+            const rateResponse = await apiClient.getFinancialReport(hospitalId, params.toString());
+            if (rateResponse.data.rate_per_km) {
+              setHospitalRatePerKm(rateResponse.data.rate_per_km);
+            }
             break;
         }
       } catch (err: any) {
@@ -388,7 +397,7 @@ export default function ReportsPage() {
             <SampleTrackingReport data={sampleReport} />
           )}
           {selectedReport === 'rider' && riderPerformanceReport && (
-            <RiderPerformanceReport data={riderPerformanceReport} />
+            <RiderPerformanceReport data={riderPerformanceReport} ratePerKm={hospitalRatePerKm} />
           )}
         </>
       )}
@@ -465,21 +474,119 @@ function TransportSummaryReport({ data, period }: { data: any; period: string })
 
 // Financial Report Component
 function FinancialReport({ data }: { data: any }) {
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [newRate, setNewRate] = useState(data.rate_per_km || 50);
+  const [currentRate, setCurrentRate] = useState(data.rate_per_km || 50);
+  const [saving, setSaving] = useState(false);
+
+  const { data: hospitalsData } = useMyHospitals();
+  const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
+
+  const handleSaveRate = async () => {
+    if (!hospitalId) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hospitals/${hospitalId}/rate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ rate_per_km: newRate })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setCurrentRate(newRate);
+        setIsEditingRate(false);
+        alert('✅ Rate per KM updated successfully!');
+      } else {
+        alert('❌ Failed to update rate: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error updating rate:', error);
+      alert('❌ Error updating rate');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative">
+          <button
+            onClick={() => setIsEditingRate(true)}
+            className="absolute top-4 right-4 p-1 hover:bg-teal-50 rounded transition-colors"
+            title="Edit rate"
+          >
+            <Edit2 className="w-4 h-4 text-teal-600" />
+          </button>
+          <h3 className="text-sm font-medium text-gray-600 mb-2">Rate per KM</h3>
+          <p className="text-3xl font-bold text-teal-600">Rs. {currentRate}</p>
+          <p className="text-xs text-gray-500 mt-1">Hospital rate</p>
+
+          {/* Edit Modal */}
+          {isEditingRate && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)' }}
+              onClick={() => {
+                setIsEditingRate(false);
+                setNewRate(currentRate);
+              }}
+            >
+              <div
+                className="bg-white rounded-lg p-6 w-96 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Rate per KM</h3>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rate (Rs. per KM)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newRate}
+                    onChange={(e) => setNewRate(parseFloat(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSaveRate}
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+                  >
+                    {saving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingRate(false);
+                      setNewRate(currentRate);
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Total Payment</h3>
-          <p className="text-3xl font-bold text-gray-900">Rs. {data.summary?.total_actual_payment || 0}</p>
+          <p className="text-3xl font-bold text-gray-900">
+            Rs. {((parseFloat(data.summary?.total_km || 0) * currentRate).toFixed(2))}
+          </p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Total KM</h3>
           <p className="text-3xl font-bold text-gray-900">{data.summary?.total_km || 0} km</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Avg Payment/KM</h3>
-          <p className="text-3xl font-bold text-gray-900">Rs. {data.summary?.overall_payment_per_km || 0}</p>
         </div>
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Completed Orders</h3>
@@ -498,19 +605,20 @@ function FinancialReport({ data }: { data: any }) {
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Orders</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Total KM</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Total Payment</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Avg Payment/KM</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.by_collection_center?.map((row: any, index: number) => (
-                <tr key={index} className="hover:bg-teal-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.center_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_orders}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_km} km</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {row.total_payment}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {row.avg_payment_per_km}</td>
-                </tr>
-              ))}
+              {data.by_collection_center?.map((row: any, index: number) => {
+                const calculatedPayment = (parseFloat(row.total_km) * currentRate).toFixed(2);
+                return (
+                  <tr key={index} className="hover:bg-teal-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.center_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_orders}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_km} km</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {calculatedPayment}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -528,20 +636,21 @@ function FinancialReport({ data }: { data: any }) {
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Deliveries</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Total KM</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Total Payment</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Avg Payment/KM</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.by_rider?.map((row: any, index: number) => (
-                <tr key={index} className="hover:bg-teal-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.rider_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.vehicle_type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_deliveries}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_km} km</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {row.total_payment}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {row.avg_payment_per_km}</td>
-                </tr>
-              ))}
+              {data.by_rider?.map((row: any, index: number) => {
+                const calculatedPayment = (parseFloat(row.total_km) * currentRate).toFixed(2);
+                return (
+                  <tr key={index} className="hover:bg-teal-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.rider_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.vehicle_type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_deliveries}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_km} km</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {calculatedPayment}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -698,7 +807,7 @@ function SampleTrackingReport({ data }: { data: any }) {
 }
 
 // Rider Performance Report Component
-function RiderPerformanceReport({ data }: { data: any }) {
+function RiderPerformanceReport({ data, ratePerKm }: { data: any; ratePerKm: number }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -719,19 +828,23 @@ function RiderPerformanceReport({ data }: { data: any }) {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data?.map((row: any, index: number) => (
-                <tr key={index} className="hover:bg-teal-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.rider_name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.rider_phone}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.vehicle_type}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_deliveries}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-green-600">{row.successful_deliveries}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_km} km</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_km_per_delivery} km</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {row.total_earnings}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_delivery_time_mins} min</td>
-                </tr>
-              ))}
+              {data?.map((row: any, index: number) => {
+                const totalKm = parseFloat(row.total_km) || 0;
+                const calculatedEarnings = (totalKm * ratePerKm).toFixed(2);
+                return (
+                  <tr key={index} className="hover:bg-teal-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.rider_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.rider_phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.vehicle_type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_deliveries}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-green-600">{row.successful_deliveries}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{totalKm} km</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_km_per_delivery} km</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {calculatedEarnings}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_delivery_time_mins} min</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
