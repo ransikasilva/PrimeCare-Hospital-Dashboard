@@ -327,6 +327,7 @@ export function CentersTable() {
         onApprove={handleApprove}
         onReject={handleReject}
         isProcessing={processingIds.has(selectedCenter?.id || '')}
+        hospitalId={hospitalId}
       />
     </div>
   );

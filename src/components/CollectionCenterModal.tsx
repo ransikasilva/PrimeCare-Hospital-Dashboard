@@ -52,6 +52,7 @@ interface CollectionCenterModalProps {
   onApprove: (centerId: string, centerName: string) => Promise<void>;
   onReject: (centerId: string, centerName: string, reason?: string) => Promise<void>;
   isProcessing: boolean;
+  hospitalId?: string;
 }
 
 export function CollectionCenterModal({
@@ -60,7 +61,8 @@ export function CollectionCenterModal({
   onClose,
   onApprove,
   onReject,
-  isProcessing
+  isProcessing,
+  hospitalId
 }: CollectionCenterModalProps) {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -132,12 +134,14 @@ export function CollectionCenterModal({
   const fetchRiders = async () => {
     if (!center) return;
 
+    console.log('🚀 FETCHING RIDERS FOR CENTER:', center.id, center.center_name);
     setLoadingRiders(true);
     try {
       const [assignedResponse, unassignedResponse] = await Promise.all([
         apiClient.getRidersForCenter(center.id),
-        apiClient.getUnassignedRidersForCenter(center.id)
+        apiClient.getUnassignedRidersForCenter(center.id, hospitalId)
       ]);
+      console.log('🚀 RAW RESPONSES:', { assignedResponse, unassignedResponse });
 
       if (assignedResponse.success && assignedResponse.data) {
         // API returns { center_id, total_riders, riders: [...] }
@@ -151,11 +155,15 @@ export function CollectionCenterModal({
 
       if (unassignedResponse.success && unassignedResponse.data) {
         // API returns { center_id, total_unassigned, riders: [...] }
+        console.log('Unassigned Response:', unassignedResponse);
+        console.log('Unassigned Response Data:', unassignedResponse.data);
         const ridersData = Array.isArray(unassignedResponse.data)
           ? unassignedResponse.data
           : (unassignedResponse.data as any).riders || [];
+        console.log('Riders Data Extracted:', ridersData);
         setUnassignedRiders(Array.isArray(ridersData) ? ridersData : []);
       } else {
+        console.log('Unassigned Response Failed or Empty:', unassignedResponse);
         setUnassignedRiders([]);
       }
     } catch (error) {

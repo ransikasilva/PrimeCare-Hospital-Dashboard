@@ -693,8 +693,11 @@ class ApiClient {
     return this.request<any[]>('/api/rider-center-assignments/hospital/assignments');
   }
 
-  async getUnassignedRidersForCenter(centerId: string) {
-    return this.request<any[]>(`/api/rider-center-assignments/center/${centerId}/unassigned-riders`);
+  async getUnassignedRidersForCenter(centerId: string, hospitalId?: string) {
+    const url = hospitalId
+      ? `/api/rider-center-assignments/center/${centerId}/unassigned-riders?hospital_id=${hospitalId}`
+      : `/api/rider-center-assignments/center/${centerId}/unassigned-riders`;
+    return this.request<any[]>(url);
   }
 
   async getHospitalAssignmentStats() {
