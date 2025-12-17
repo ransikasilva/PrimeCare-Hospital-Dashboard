@@ -14,7 +14,6 @@ import {
   Settings,
   ChevronRight,
   ClipboardList,
-  Shield,
   Hospital
 } from "lucide-react";
 
@@ -91,13 +90,6 @@ export function Sidebar() {
       description: "Performance & billing"
     },
     {
-      name: "Audit & Compliance",
-      href: "/audit",
-      icon: Shield,
-      badge: null,
-      description: "Chain of custody"
-    },
-    {
       name: "Settings",
       href: "/settings",
       icon: Settings,
@@ -124,7 +116,7 @@ export function Sidebar() {
           badge: null,
           description: "Network hospitals"
         },
-        ...baseNavigation.slice(6) // Reports, Audit, Settings
+        ...baseNavigation.slice(6) // Reports, Settings
       ]
     : baseNavigation;
 
