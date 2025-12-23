@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Building2, Users, Package } from 'lucide-react';
+import { apiClient } from '@/lib/api';
 
 interface SearchResult {
   type: 'center' | 'rider' | 'order';
@@ -31,76 +32,97 @@ export function SearchBar() {
         const query = searchQuery.toLowerCase();
         const results: SearchResult[] = [];
 
-        // Search collection centers
-        const centersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/collection-centers`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-        if (centersRes.ok) {
-          const centersData = await centersRes.json();
-          if (centersData?.data?.centers) {
-            centersData.data.centers.forEach((center: any) => {
-              if (center.center_name?.toLowerCase().includes(query)) {
-                results.push({
-                  type: 'center',
-                  id: center.id,
-                  title: center.center_name,
-                  subtitle: center.address || 'Collection Center',
-                  icon: Building2
-                });
-              }
-            });
-          }
-        }
+        // Get hospital-specific data using existing endpoints
+        const [ridersResponse, ordersResponse] = await Promise.all([
+          apiClient.getMyHospitalRiders(),
+          apiClient.getHospitalOrders({ limit: 100 })
+        ]);
+
+        console.log('Riders response:', ridersResponse);
+        console.log('Orders response:', ordersResponse);
 
         // Search riders
-        const ridersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/riders`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-        if (ridersRes.ok) {
-          const ridersData = await ridersRes.json();
-          if (ridersData?.data?.riders) {
-            ridersData.data.riders.forEach((rider: any) => {
-              if (rider.rider_name?.toLowerCase().includes(query) || rider.rider_id?.toLowerCase().includes(query)) {
-                results.push({
-                  type: 'rider',
-                  id: rider.id,
-                  title: rider.rider_name,
-                  subtitle: `${rider.availability_status || 'Unknown'} • ${rider.vehicle_type || 'Vehicle'}`,
-                  icon: Users
-                });
-              }
-            });
-          }
+        if (ridersResponse.success && ridersResponse.data) {
+          const riders = ridersResponse.data.riders || ridersResponse.data || [];
+          console.log('Total riders:', riders.length);
+
+          riders.forEach((rider: any) => {
+            const nameMatch = rider.rider_name?.toLowerCase().includes(query);
+            const phoneMatch = rider.phone?.includes(query);
+
+            if (nameMatch || phoneMatch) {
+              results.push({
+                type: 'rider',
+                id: rider.id,
+                title: rider.rider_name,
+                subtitle: `${rider.availability_status || rider.rider_status || 'Rider'} • ${rider.vehicle_type || 'Vehicle'}`,
+                icon: Users
+              });
+            }
+          });
         }
 
-        // Search orders
-        const ordersRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders?limit=50`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-        if (ordersRes.ok) {
-          const ordersData = await ordersRes.json();
-          if (ordersData?.data?.orders) {
-            ordersData.data.orders.forEach((order: any) => {
-              if (order.order_number?.toLowerCase().includes(query)) {
-                results.push({
-                  type: 'order',
-                  id: order.id,
-                  title: order.order_number,
-                  subtitle: `${order.center_name || 'Unknown'} • ${order.status || 'Pending'}`,
-                  icon: Package
+        // Search orders and extract collection centers
+        if (ordersResponse.success && ordersResponse.data) {
+          const orders = ordersResponse.data.orders || ordersResponse.data || [];
+          console.log('Total orders:', orders.length);
+
+          // Extract unique collection centers FIRST
+          const centersMap = new Map();
+          orders.forEach((order: any) => {
+            if (order.center_id && order.center_name) {
+              if (!centersMap.has(order.center_id)) {
+                centersMap.set(order.center_id, {
+                  id: order.center_id,
+                  name: order.center_name,
+                  address: order.collection_center_address || order.center_address || ''
                 });
               }
-            });
-          }
+            }
+          });
+
+          console.log('Total centers:', centersMap.size);
+
+          // Search collection centers
+          centersMap.forEach((center) => {
+            if (center.name?.toLowerCase().includes(query) ||
+                center.address?.toLowerCase().includes(query)) {
+              results.push({
+                type: 'center',
+                id: center.id,
+                title: center.name,
+                subtitle: center.address || 'Collection Center',
+                icon: Building2
+              });
+            }
+          });
+
+          // Search orders
+          orders.forEach((order: any) => {
+            const orderMatch = order.order_number?.toLowerCase().includes(query);
+            const centerMatch = order.center_name?.toLowerCase().includes(query);
+
+            if (orderMatch || centerMatch) {
+              results.push({
+                type: 'order',
+                id: order.id,
+                title: order.order_number,
+                subtitle: `${order.center_name || 'Unknown'} • ${order.status || 'Pending'}`,
+                icon: Package
+              });
+            }
+          });
         }
 
-        setSearchResults(results.slice(0, 10));
+        // Sort results: centers first, then riders, then orders
+        const sortedResults = [
+          ...results.filter(r => r.type === 'center'),
+          ...results.filter(r => r.type === 'rider'),
+          ...results.filter(r => r.type === 'order')
+        ];
+
+        console.log('Search results:', sortedResults);
+        setSearchResults(sortedResults.slice(0, 10));
       } catch (error) {
         console.error('Search error:', error);
         setSearchResults([]);

@@ -397,6 +397,33 @@ class ApiClient {
     return this.request<any[]>(`/api/collection-centers/hospitals/${hospitalId}`);
   }
 
+  async getCollectionCenters() {
+    return this.request<any>('/api/collection-centers');
+  }
+
+  async getRiders() {
+    return this.request<any>('/api/riders');
+  }
+
+  async getOrders(params?: {
+    status?: string;
+    limit?: number;
+    offset?: number;
+    search?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const endpoint = `/api/orders${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.request(endpoint);
+  }
+
   // Orders management - Additional endpoints
   async assignRiderToOrder(orderId: string, riderId: string, notes?: string) {
     return this.request<any>(`/api/orders/${orderId}/assign-rider`, {
