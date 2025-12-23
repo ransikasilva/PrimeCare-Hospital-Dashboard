@@ -92,37 +92,11 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
         return;
       }
 
-      // Process QR scans data from the response
-      let qrScans: any[] = qrScansData;
-
-      // If we need chain of custody details, fetch them separately
-      if (qrScansData.length === 0) {
-        try {
-          const qrResponse = await apiClient.getOrderQRCodes(orderId);
-          if (qrResponse.success && qrResponse.data) {
-            const qrCodes = (qrResponse.data as any)?.qr_codes || [];
-
-            // Fetch chain of custody for each QR code
-            for (const qr of qrCodes) {
-              try {
-                const chainResponse = await apiClient.getChainOfCustody(qr.qr_id);
-                if (chainResponse.success && chainResponse.data) {
-                  const chainData = (chainResponse.data as any)?.chain_of_custody || [];
-                  qrScans = [...qrScans, ...chainData];
-                }
-              } catch (err) {
-                console.error('Error fetching chain for QR:', qr.qr_id, err);
-              }
-            }
-          }
-        } catch (err) {
-          console.error('Error fetching QR codes:', err);
-        }
-      }
-
+      // Use QR scans data directly from the response
+      // The order details API already includes complete chain of custody information
       setOrderDetails({
         order,
-        qr_scans: qrScans,
+        qr_scans: qrScansData,
         location_tracking: locationTracking
       });
 
@@ -664,8 +638,10 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         </div>
                       )}
 
-                      {/* Show if still in transit */}
-                      {orderDetails.order?.status !== 'delivered' && orderDetails.order?.rider_name && (
+                      {/* Show if still in transit - only after rider has picked up */}
+                      {orderDetails.order?.status !== 'delivered' &&
+                       orderDetails.order?.rider_name &&
+                       ['picked_up', 'in_transit', 'delivery_started'].includes(orderDetails.order?.status || '') && (
                         <div className="relative pl-14">
                           <div className="absolute left-4 top-2 w-4 h-4 bg-yellow-600 rounded-full border-2 border-white shadow animate-pulse"></div>
                           <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -764,43 +740,84 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                   </div>
 
                   <div>
-                    <OrderTrackingMap
-                      locationPoints={orderDetails.location_tracking || []}
-                      pickupLocation={
-                        orderDetails.order?.center_coordinates?.lat && orderDetails.order?.center_coordinates?.lng
-                          ? {
-                              lat: orderDetails.order.center_coordinates.lat,
-                              lng: orderDetails.order.center_coordinates.lng,
-                              name: orderDetails.order.center_name || 'Pickup'
-                            }
-                          : undefined
+                    {(() => {
+                      // Transform data to match the working map component format
+                      const hasValidCoords = orderDetails.order?.center_coordinates?.lat &&
+                                            orderDetails.order?.center_coordinates?.lng &&
+                                            orderDetails.order?.hospital_coordinates?.lat &&
+                                            orderDetails.order?.hospital_coordinates?.lng;
+
+                      if (!hasValidCoords) {
+                        return (
+                          <div className="bg-gray-50 p-8 rounded-xl border-2 border-dashed border-gray-300 text-center">
+                            <Navigation className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Map Not Available</h3>
+                            <p className="text-gray-600">Location coordinates are missing for this order.</p>
+                          </div>
+                        );
                       }
-                      deliveryLocation={
-                        orderDetails.order?.hospital_coordinates?.lat && orderDetails.order?.hospital_coordinates?.lng
-                          ? {
-                              lat: orderDetails.order.hospital_coordinates.lat,
-                              lng: orderDetails.order.hospital_coordinates.lng,
-                              name: orderDetails.order.hospital_name || 'Hospital'
-                            }
-                          : undefined
+
+                      // Build location tracking array
+                      const locationTracking = [];
+
+                      // Add rider's current location first if available
+                      if (orderDetails.order?.rider_current_location?.lat && orderDetails.order?.rider_current_location?.lng) {
+                        locationTracking.push({
+                          id: 'current-location',
+                          rider_id: orderDetails.order.rider_id || 'unknown',
+                          location: {
+                            lat: orderDetails.order.rider_current_location.lat,
+                            lng: orderDetails.order.rider_current_location.lng
+                          },
+                          speed_kmh: undefined,
+                          accuracy_meters: undefined,
+                          recorded_at: orderDetails.order.rider_current_location.updated_at || new Date().toISOString()
+                        });
                       }
-                      handoverLocation={
-                        orderDetails.order?.handover_point_lat && orderDetails.order?.handover_point_lng
-                          ? {
-                              lat: orderDetails.order.handover_point_lat,
-                              lng: orderDetails.order.handover_point_lng
-                            }
-                          : undefined
+
+                      // Add historical tracking points
+                      if (orderDetails.location_tracking && orderDetails.location_tracking.length > 0) {
+                        orderDetails.location_tracking.forEach((location: any, index: number) => {
+                          locationTracking.push({
+                            id: `location-${index}`,
+                            rider_id: orderDetails.order?.rider_id || 'unknown',
+                            location: {
+                              lat: location.location_lat || location.lat,
+                              lng: location.location_lng || location.lng
+                            },
+                            speed_kmh: location.speed_kmh,
+                            accuracy_meters: location.accuracy_meters,
+                            recorded_at: location.recorded_at
+                          });
+                        });
                       }
-                      riderLocation={
-                        orderDetails.order?.rider_current_location?.lat && orderDetails.order?.rider_current_location?.lng
-                          ? {
-                              lat: orderDetails.order.rider_current_location.lat,
-                              lng: orderDetails.order.rider_current_location.lng
-                            }
-                          : undefined
-                      }
-                    />
+
+                      const mapData = {
+                        order: {
+                          id: orderDetails.order?.id || '',
+                          order_number: orderDetails.order?.order_number || '',
+                          center_name: orderDetails.order?.center_name || '',
+                          center_address: orderDetails.order?.center_address || '',
+                          hospital_name: orderDetails.order?.hospital_name || '',
+                          hospital_address: orderDetails.order?.hospital_address || '',
+                          rider_name: orderDetails.order?.rider_name,
+                          rider_phone: orderDetails.order?.rider_phone,
+                          pickup_location: {
+                            lat: orderDetails.order.center_coordinates.lat!,
+                            lng: orderDetails.order.center_coordinates.lng!
+                          },
+                          delivery_location: {
+                            lat: orderDetails.order.hospital_coordinates.lat!,
+                            lng: orderDetails.order.hospital_coordinates.lng!
+                          },
+                          status: orderDetails.order?.status || ''
+                        },
+                        location_tracking: locationTracking
+                      };
+
+                      const OrderTrackingMapNew = require('@/components/OrderTrackingMapNew').default;
+                      return <OrderTrackingMapNew orderDetails={mapData} onRefresh={handleRefreshLocation} />;
+                    })()}
                     {orderDetails.location_tracking && orderDetails.location_tracking.length > 0 ? (
                       <div className="mt-4 flex items-center justify-between text-sm text-gray-600 bg-teal-50 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
