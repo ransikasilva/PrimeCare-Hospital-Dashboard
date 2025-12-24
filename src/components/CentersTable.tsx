@@ -147,34 +147,39 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
   // Real reject function
   const handleReject = async (centerId: string, centerName: string, reason?: string) => {
     if (processingIds.has(centerId)) return;
-    
+
+    if (!hospitalId) {
+      alert('❌ Hospital ID not found. Please refresh the page and try again.');
+      return;
+    }
+
     // If no reason provided (e.g., from modal), prompt for it
     const rejectionReason = reason || prompt(`Enter rejection reason for ${centerName}:`);
     if (!rejectionReason) return;
-    
+
     setProcessingIds(prev => new Set(prev).add(centerId));
-    
+
     try {
-      // Using the reject API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/approvals/reject/collection-center/${centerId}`, {
+      // Using the new hospital-specific reject API endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/approvals/collection-centers/${centerId}/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
         body: JSON.stringify({
-          rejection_reason: rejectionReason,
-          notes: `Rejected by hospital: ${rejectionReason}`
+          hospitalId: hospitalId,
+          reason: rejectionReason
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         await Promise.all([refetchDashboard(), refetchPending()]);
-        alert(`✅ ${centerName} has been rejected.`);
+        alert(`✅ ${centerName} has been rejected for this hospital.`);
       } else {
-        alert(`❌ Failed to reject ${centerName}: ${result.error?.message}`);
+        alert(`❌ Failed to reject ${centerName}: ${result.error?.message || result.error?.details}`);
       }
     } catch (error) {
       console.error('Rejection error:', error);
@@ -335,12 +340,14 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.status)}`}>
-                      {center.status === 'approved' ? 'Active' : 
-                       center.status === 'pending_hospital_approval' ? 'Pending Hospital Approval' : 
-                       center.status === 'pending_hq_approval' ? 'Pending HQ Approval' :
-                       center.status === 'active' ? 'Active' :
-                       center.status}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.relation_status || center.status)}`}>
+                      {(center.relation_status === 'pending' ? 'Pending Approval' :
+                        center.relation_status === 'approved' ? 'Approved' :
+                        center.status === 'approved' ? 'Active' :
+                        center.status === 'pending_hospital_approval' ? 'Pending Hospital Approval' :
+                        center.status === 'pending_hq_approval' ? 'Pending HQ Approval' :
+                        center.status === 'active' ? 'Active' :
+                        center.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

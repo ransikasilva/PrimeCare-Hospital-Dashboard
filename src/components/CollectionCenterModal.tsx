@@ -241,11 +241,12 @@ export function CollectionCenterModal({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'pending_hospital_approval':
+      case 'pending':
         return {
           icon: AlertTriangle,
           color: '#f59e0b',
           bg: 'bg-yellow-100',
-          text: 'Pending Hospital Approval',
+          text: 'Pending Approval',
           className: 'text-yellow-800'
         };
       case 'approved':
@@ -255,6 +256,14 @@ export function CollectionCenterModal({
           bg: 'bg-green-100',
           text: 'Approved',
           className: 'text-green-800'
+        };
+      case 'pending_hq_approval':
+        return {
+          icon: AlertTriangle,
+          color: '#14b8a6',
+          bg: 'bg-teal-100',
+          text: 'Pending HQ Approval',
+          className: 'text-teal-800'
         };
       case 'rejected':
         return {
@@ -275,7 +284,9 @@ export function CollectionCenterModal({
     }
   };
 
-  const statusConfig = getStatusConfig(center.status);
+  // Use relation_status if available (for multi-hospital centers), otherwise use center.status
+  const displayStatus = center.relation_status || center.status;
+  const statusConfig = getStatusConfig(displayStatus);
   const StatusIcon = statusConfig.icon;
 
   // Helper functions for order styling
@@ -946,12 +957,12 @@ export function CollectionCenterModal({
             )}
 
             {/* Action Buttons */}
-            {(center.status === "pending_hospital_approval" || center.status === "pending_hq_approval" || center.status === "approved" || center.status === "rejected") && (
+            {(center.status === "pending_hospital_approval" || center.status === "pending_hq_approval" || center.status === "approved" || center.status === "rejected" || center.relation_status === "pending") && (
               <div className="mt-8 pt-6 border-t border-gray-200">
                 {!showRejectForm ? (
                   <div className="flex justify-end space-x-4">
-                    {/* Show Reject button only if not already rejected */}
-                    {center.status !== "rejected" && (
+                    {/* Show Reject button only if not already rejected by this hospital */}
+                    {center.relation_status !== "rejected" && center.status !== "rejected" && (
                       <button
                         onClick={() => setShowRejectForm(true)}
                         disabled={isProcessing}
@@ -969,8 +980,8 @@ export function CollectionCenterModal({
                       </button>
                     )}
 
-                    {/* Show Approve button only if not already approved or pending HQ approval */}
-                    {center.status !== "approved" && center.status !== "pending_hq_approval" && (
+                    {/* Show Approve button if THIS hospital hasn't approved yet (check relation_status) */}
+                    {(center.relation_status === "pending" || center.status === "pending_hospital_approval") && (
                       <button
                         onClick={handleApprove}
                         disabled={isProcessing}
