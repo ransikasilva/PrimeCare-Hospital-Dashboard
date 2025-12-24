@@ -97,6 +97,56 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
     return "text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200 font-medium";
   };
 
+  // Check if order is exceeding SLA thresholds
+  const getSLARowColor = (order: any) => {
+    const now = new Date();
+    const createdAt = new Date(order.created_at);
+    const assignedAt = order.assigned_at ? new Date(order.assigned_at) : null;
+    const pickedUpAt = order.picked_up_at ? new Date(order.picked_up_at) : null;
+
+    // Default SLA thresholds (in minutes) - these should ideally come from API
+    const PICKUP_RESPONSE_THRESHOLD = 15; // assigned → picked up
+    const STANDARD_DELIVERY_THRESHOLD = 90; // picked up → delivered (routine)
+    const URGENT_DELIVERY_THRESHOLD = 45; // created → delivered (urgent)
+    const ALERT_THRESHOLD = 10; // warning before deadline
+
+    const minutesSinceCreated = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+    const minutesSinceAssigned = assignedAt ? (now.getTime() - assignedAt.getTime()) / (1000 * 60) : 0;
+    const minutesSincePickedUp = pickedUpAt ? (now.getTime() - pickedUpAt.getTime()) / (1000 * 60) : 0;
+
+    // Skip if already delivered or cancelled
+    if (order.status === 'delivered' || order.status === 'cancelled') {
+      return "hover:bg-gray-50";
+    }
+
+    // Check urgent delivery total time (created → delivered)
+    if (order.urgency === 'urgent' && minutesSinceCreated > URGENT_DELIVERY_THRESHOLD) {
+      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - exceeded
+    }
+    if (order.urgency === 'urgent' && minutesSinceCreated > (URGENT_DELIVERY_THRESHOLD - ALERT_THRESHOLD)) {
+      return "bg-orange-50 hover:bg-orange-100 border-2 border-orange-500"; // Warning - approaching deadline
+    }
+
+    // Check pickup response time (assigned → picked up)
+    if (order.status === 'assigned' && minutesSinceAssigned > PICKUP_RESPONSE_THRESHOLD) {
+      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - rider hasn't picked up
+    }
+    if (order.status === 'assigned' && minutesSinceAssigned > (PICKUP_RESPONSE_THRESHOLD - ALERT_THRESHOLD)) {
+      return "bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-500"; // Warning
+    }
+
+    // Check standard delivery time (picked up → delivered for routine)
+    if (order.urgency === 'routine' && pickedUpAt && minutesSincePickedUp > STANDARD_DELIVERY_THRESHOLD) {
+      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - exceeded
+    }
+    if (order.urgency === 'routine' && pickedUpAt && minutesSincePickedUp > (STANDARD_DELIVERY_THRESHOLD - ALERT_THRESHOLD)) {
+      return "bg-orange-50 hover:bg-orange-100 border-2 border-orange-500"; // Warning
+    }
+
+    // Default - no SLA issues
+    return "hover:bg-teal-50";
+  };
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
@@ -156,7 +206,7 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
               </tr>
             ) : (
               orders.map((order: any) => (
-                <tr key={order.id} className="hover:bg-teal-50 transition-colors duration-200">
+                <tr key={order.id} className={`transition-colors duration-200 ${getSLARowColor(order)}`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-2 h-8 bg-teal-400 rounded-l-md mr-3"></div>

@@ -260,15 +260,117 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                 <div className="space-y-6">
                   {/* Status & Urgency */}
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
                         <label className="text-sm font-medium text-gray-600">Status</label>
-                        <p className={`mt-1 px-3 py-1 rounded-full text-sm font-medium inline-block ${getStatusColor(orderDetails.order?.status)}`}>
-                          {orderDetails.order?.status?.replace(/_/g, ' ').toUpperCase()}
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`px-3 py-1 rounded-full text-sm font-medium inline-block ${getStatusColor(orderDetails.order?.status)}`}>
+                            {orderDetails.order?.status?.replace(/_/g, ' ').toUpperCase()}
+                          </p>
+                          {(() => {
+                            const now = new Date();
+                            const createdAt = orderDetails.order?.created_at ? new Date(orderDetails.order.created_at) : null;
+                            const assignedAt = orderDetails.order?.assigned_at ? new Date(orderDetails.order.assigned_at) : null;
+                            const pickedUpAt = orderDetails.order?.picked_up_at ? new Date(orderDetails.order.picked_up_at) : null;
+
+                            let timeInfo = null;
+
+                            if (orderDetails.order?.status === 'assigned' && assignedAt) {
+                              const minutesElapsed = Math.floor((now.getTime() - assignedAt.getTime()) / (1000 * 60));
+                              const isOverdue = minutesElapsed > 15;
+                              timeInfo = (
+                                <span className={`text-xs px-2 py-1 rounded ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'}`}>
+                                  {minutesElapsed} min {isOverdue ? 'overdue' : 'elapsed'}
+                                </span>
+                              );
+                            } else if (orderDetails.order?.status === 'picked_up' && pickedUpAt) {
+                              const minutesElapsed = Math.floor((now.getTime() - pickedUpAt.getTime()) / (1000 * 60));
+                              const threshold = orderDetails.order?.urgency === 'urgent' ? 45 : 90;
+                              const isOverdue = minutesElapsed > threshold;
+                              timeInfo = (
+                                <span className={`text-xs px-2 py-1 rounded ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'}`}>
+                                  {minutesElapsed} min {isOverdue ? 'overdue' : 'in transit'}
+                                </span>
+                              );
+                            } else if (orderDetails.order?.status === 'pending_rider_assignment' && createdAt) {
+                              const minutesElapsed = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
+                              timeInfo = (
+                                <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                                  Waiting {minutesElapsed} min
+                                </span>
+                              );
+                            }
+
+                            return timeInfo;
+                          })()}
+                        </div>
+
+                        {/* SLA Delay Type Indicator */}
+                        {(() => {
+                          const now = new Date();
+                          const createdAt = orderDetails.order?.created_at ? new Date(orderDetails.order.created_at) : null;
+                          const assignedAt = orderDetails.order?.assigned_at ? new Date(orderDetails.order.assigned_at) : null;
+                          const pickedUpAt = orderDetails.order?.picked_up_at ? new Date(orderDetails.order.picked_up_at) : null;
+
+                          const delays = [];
+
+                          // Check pickup response delay (assigned → picked up)
+                          if (orderDetails.order?.status === 'assigned' && assignedAt) {
+                            const minutesElapsed = Math.floor((now.getTime() - assignedAt.getTime()) / (1000 * 60));
+                            if (minutesElapsed > 15) {
+                              delays.push({
+                                type: 'Pickup Response Delay',
+                                message: `Rider should have picked up ${minutesElapsed - 15} min ago (15 min SLA)`,
+                                severity: 'critical'
+                              });
+                            }
+                          }
+
+                          // Check urgent total delay (created → delivered)
+                          if (orderDetails.order?.urgency === 'urgent' && createdAt && orderDetails.order?.status !== 'delivered') {
+                            const minutesElapsed = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
+                            if (minutesElapsed > 45) {
+                              delays.push({
+                                type: 'Urgent Delivery Delay',
+                                message: `Order should have been delivered ${minutesElapsed - 45} min ago (45 min total SLA)`,
+                                severity: 'critical'
+                              });
+                            }
+                          }
+
+                          // Check standard delivery delay (picked up → delivered for routine)
+                          if (orderDetails.order?.urgency === 'routine' && pickedUpAt && orderDetails.order?.status !== 'delivered') {
+                            const minutesElapsed = Math.floor((now.getTime() - pickedUpAt.getTime()) / (1000 * 60));
+                            if (minutesElapsed > 90) {
+                              delays.push({
+                                type: 'Standard Delivery Delay',
+                                message: `Delivery should have completed ${minutesElapsed - 90} min ago (90 min SLA)`,
+                                severity: 'critical'
+                              });
+                            }
+                          }
+
+                          if (delays.length > 0) {
+                            return (
+                              <div className="mt-3 space-y-2">
+                                {delays.map((delay, index) => (
+                                  <div key={index} className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                    <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                    <div>
+                                      <p className="text-xs font-semibold text-red-800">{delay.type}</p>
+                                      <p className="text-xs text-red-700">{delay.message}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+
+                          return null;
+                        })()}
                       </div>
                       {orderDetails.order?.urgency === 'urgent' && (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-lg">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-lg h-fit flex-shrink-0">
                           <AlertTriangle className="w-4 h-4" />
                           <span className="text-sm font-medium">URGENT</span>
                         </div>

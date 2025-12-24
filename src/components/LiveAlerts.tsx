@@ -1,8 +1,13 @@
 'use client';
 
+import { useState } from 'react';
+import { EnhancedOrderDetailModal } from './modals/EnhancedOrderDetailModal';
+import { Eye } from 'lucide-react';
+
 interface Alert {
   id: string;
-  order_id?: string;
+  order_uuid?: string; // UUID for API calls
+  order_id?: string; // Order number for display
   type: 'Critical' | 'Warning' | 'Info';
   title: string;
   message: string;
@@ -16,9 +21,17 @@ interface LiveAlertsProps {
 }
 
 export function LiveAlerts({ data, filter }: LiveAlertsProps) {
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+
   // Use only real data from the API - no mock data
   const alerts = Array.isArray(data) ? data : [];
   const filteredAlerts = filter === 'All' ? alerts : alerts.filter(alert => alert.type === filter);
+
+  const handleViewOrder = (orderUuid: string) => {
+    setSelectedOrderId(orderUuid);
+    setShowDetailModal(true);
+  };
 
   const getAlertStyles = (type: Alert['type']) => {
     switch (type) {
@@ -95,9 +108,20 @@ export function LiveAlerts({ data, filter }: LiveAlertsProps) {
                     </div>
                   </div>
                   <p className="text-sm text-gray-700 mb-2">{alert.message}</p>
-                  {alert.order_id && (
-                    <p className="text-xs text-gray-600">Order: {alert.order_id}</p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    {alert.order_id && (
+                      <p className="text-xs text-gray-600">Order: {alert.order_id}</p>
+                    )}
+                    {alert.order_uuid && (
+                      <button
+                        onClick={() => handleViewOrder(alert.order_uuid!)}
+                        className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-teal-700 bg-white border border-teal-300 rounded-md hover:bg-teal-50 hover:border-teal-400 transition-colors duration-200"
+                      >
+                        <Eye className="w-3.5 h-3.5 mr-1.5" />
+                        View Order
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -111,6 +135,18 @@ export function LiveAlerts({ data, filter }: LiveAlertsProps) {
             Showing {filteredAlerts.length} {filter === 'All' ? '' : filter.toLowerCase()} alert{filteredAlerts.length !== 1 ? 's' : ''}
           </p>
         </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {showDetailModal && selectedOrderId && (
+        <EnhancedOrderDetailModal
+          orderId={selectedOrderId}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedOrderId(null);
+          }}
+        />
       )}
     </div>
   );

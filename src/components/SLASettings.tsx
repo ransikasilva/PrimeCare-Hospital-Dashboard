@@ -97,50 +97,9 @@ export function SLASettings() {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Urgent Delivery
+            Pickup Response Time
           </label>
-          <div className="flex items-center space-x-2">
-            {isEditing ? (
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={config.urgent_delivery}
-                onChange={(e) => updateConfig('urgent_delivery', parseInt(e.target.value) || 0)}
-                className="w-20 px-2 py-1 bg-white text-gray-900 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <span className="text-lg font-semibold text-gray-900">{config.urgent_delivery}</span>
-            )}
-            <span className="text-sm text-gray-500">minutes</span>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Standard Delivery
-          </label>
-          <div className="flex items-center space-x-2">
-            {isEditing ? (
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={config.standard_delivery}
-                onChange={(e) => updateConfig('standard_delivery', parseInt(e.target.value) || 0)}
-                className="w-20 px-2 py-1 bg-white text-gray-900 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <span className="text-lg font-semibold text-gray-900">{config.standard_delivery}</span>
-            )}
-            <span className="text-sm text-gray-500">minutes</span>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Pickup Response
-          </label>
+          <p className="text-xs text-gray-500">From rider assigned → picked up</p>
           <div className="flex items-center space-x-2">
             {isEditing ? (
               <input
@@ -160,8 +119,53 @@ export function SLASettings() {
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
+            Standard Delivery Time
+          </label>
+          <p className="text-xs text-gray-500">From picked up → delivered (routine)</p>
+          <div className="flex items-center space-x-2">
+            {isEditing ? (
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={config.standard_delivery}
+                onChange={(e) => updateConfig('standard_delivery', parseInt(e.target.value) || 0)}
+                className="w-20 px-2 py-1 bg-white text-gray-900 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <span className="text-lg font-semibold text-gray-900">{config.standard_delivery}</span>
+            )}
+            <span className="text-sm text-gray-500">minutes</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Urgent Delivery Time (Total)
+          </label>
+          <p className="text-xs text-gray-500">From order created → delivered (urgent)</p>
+          <div className="flex items-center space-x-2">
+            {isEditing ? (
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={config.urgent_delivery}
+                onChange={(e) => updateConfig('urgent_delivery', parseInt(e.target.value) || 0)}
+                className="w-20 px-2 py-1 bg-white text-gray-900 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <span className="text-lg font-semibold text-gray-900">{config.urgent_delivery}</span>
+            )}
+            <span className="text-sm text-gray-500">minutes</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
             Alert Threshold
           </label>
+          <p className="text-xs text-gray-500">Warning time before deadline</p>
           <div className="flex items-center space-x-2">
             {isEditing ? (
               <input
@@ -224,10 +228,10 @@ export function SLASettings() {
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="text-sm font-medium text-gray-900 mb-2">Configuration Info</h4>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Urgent deliveries must be completed within {config.urgent_delivery} minutes</li>
-          <li>• Standard deliveries must be completed within {config.standard_delivery} minutes</li>
-          <li>• Pickup responses are expected within {config.pickup_response} minutes</li>
-          <li>• Alerts are triggered {config.alert_threshold} minutes before deadlines</li>
+          <li>• <strong>Pickup Response:</strong> Rider must pick up sample within {config.pickup_response} min after assignment</li>
+          <li>• <strong>Standard Delivery:</strong> Routine orders must be delivered within {config.standard_delivery} min after pickup</li>
+          <li>• <strong>Urgent Delivery:</strong> Urgent orders must be completed within {config.urgent_delivery} min total (creation to delivery)</li>
+          <li>• <strong>Alert Threshold:</strong> Warning alerts trigger {config.alert_threshold} min before any deadline</li>
         </ul>
       </div>
     </div>

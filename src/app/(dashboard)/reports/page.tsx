@@ -665,7 +665,7 @@ function TATPerformanceReport({ data }: { data: any }) {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      {/* Summary Cards - Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-sm font-medium text-gray-600 mb-2">Avg Pickup Response</h3>
@@ -686,6 +686,34 @@ function TATPerformanceReport({ data }: { data: any }) {
           <h3 className="text-sm font-medium text-gray-600 mb-2">SLA Compliance</h3>
           <p className="text-3xl font-bold text-green-600">{overview.sla_compliance_percentage || 0}%</p>
           <p className="text-sm text-gray-500 mt-1">{overview.sla_compliant_orders || 0} / {overview.delivered_orders || 0} orders</p>
+        </div>
+      </div>
+
+      {/* SLA Violation Metrics - Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Missed Pickups</h3>
+            <AlertCircle className="w-5 h-5 text-red-500" />
+          </div>
+          <p className="text-3xl font-bold text-red-600">{overview.missed_pickups || 0}</p>
+          <p className="text-sm text-gray-500 mt-1">Rider didn't pick up within 15 min</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-orange-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Delayed Deliveries</h3>
+            <Clock className="w-5 h-5 text-orange-500" />
+          </div>
+          <p className="text-3xl font-bold text-orange-600">{overview.delayed_deliveries || 0}</p>
+          <p className="text-sm text-gray-500 mt-1">Exceeded delivery threshold</p>
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-yellow-200 p-6">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-medium text-gray-600">Assigned Not Picked Up</h3>
+            <Users className="w-5 h-5 text-yellow-500" />
+          </div>
+          <p className="text-3xl font-bold text-yellow-600">{overview.assigned_not_picked || 0}</p>
+          <p className="text-sm text-gray-500 mt-1">Currently assigned but not picked</p>
         </div>
       </div>
 
