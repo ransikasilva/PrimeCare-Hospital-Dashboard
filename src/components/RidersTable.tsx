@@ -5,30 +5,72 @@ import { useMyHospitals, usePendingApprovals, useRiders, useApproveRider } from 
 import { RiderModal } from "./RiderModal";
 import apiClient from "@/lib/api";
 
-export function RidersTable() {
+interface RidersTableProps {
+  searchTerm?: string;
+  statusFilter?: string;
+  sortBy?: 'name' | 'status' | 'deliveries' | 'created';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export function RidersTable({ searchTerm = '', statusFilter = 'all', sortBy = 'name', sortOrder = 'asc' }: RidersTableProps) {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [selectedRider, setSelectedRider] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [riderKMData, setRiderKMData] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Today's date
   const { approveRider, loading: approveLoading } = useApproveRider();
-  
+
   const { data: hospitalsData } = useMyHospitals();
   const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
   const { data: pendingData, loading: pendingLoading, error, refetch: refetchPending } = usePendingApprovals(hospitalId || '');
   const { data: ridersData, loading: ridersLoading, refetch: refetchRiders } = useRiders(hospitalId || '');
-  
+
   // Get all riders from both sources
   const activeRiders = (ridersData?.data as any)?.riders || [];
   const pendingRiders = (pendingData?.data as any)?.riders || [];
-  
+
   // Combine and deduplicate riders by ID
   const riderMap = new Map();
   [...activeRiders, ...pendingRiders].forEach(rider => {
     riderMap.set(rider.id, rider);
   });
-  const riders = Array.from(riderMap.values());
-  
+  let riders = Array.from(riderMap.values());
+
+  // Apply status filter
+  if (statusFilter !== 'all') {
+    riders = riders.filter((rider: any) => rider.status === statusFilter);
+  }
+
+  // Apply search filter
+  if (searchTerm) {
+    riders = riders.filter((rider: any) =>
+      rider.rider_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rider.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      rider.phone?.includes(searchTerm) ||
+      rider.vehicle_registration?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  // Apply sorting
+  riders = riders.sort((a: any, b: any) => {
+    let compareValue = 0;
+    switch (sortBy) {
+      case 'name':
+        compareValue = (a.rider_name || '').localeCompare(b.rider_name || '');
+        break;
+      case 'status':
+        compareValue = (a.status || '').localeCompare(b.status || '');
+        break;
+      case 'deliveries':
+        compareValue = (a.total_deliveries || 0) - (b.total_deliveries || 0);
+        break;
+      case 'created':
+        compareValue = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        break;
+    }
+    return sortOrder === 'asc' ? compareValue : -compareValue;
+  });
+
   const loading = pendingLoading || ridersLoading;
 
   // Fetch KM data for all riders using batch endpoint

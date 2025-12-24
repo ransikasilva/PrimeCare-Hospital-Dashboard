@@ -2,24 +2,32 @@
 
 import { RidersTable } from "@/components/RidersTable";
 import { useMyHospitals, usePendingApprovals, useRiders } from "@/hooks/useApi";
+import { useState } from "react";
+import { Search, ArrowUpDown } from "lucide-react";
 
 export default function RidersPage() {
   const { data: hospitalsData } = useMyHospitals();
   const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
   const { data: pendingData } = usePendingApprovals(hospitalId || '');
   const { data: ridersData } = useRiders(hospitalId || '');
-  
+
+  // Filter and sort states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'status' | 'deliveries' | 'created'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
   // Get all riders from both sources
   const activeRiders = ridersData?.data?.riders || [];
   const pendingRiders = pendingData?.data?.riders || [];
-  
+
   // Combine and deduplicate riders by ID
   const riderMap = new Map();
   [...activeRiders, ...pendingRiders].forEach(rider => {
     riderMap.set(rider.id, rider);
   });
   const allRiders = Array.from(riderMap.values());
-  
+
   const pendingCount = allRiders.filter((r: any) => r.status === 'pending_hospital_approval').length;
   const activeCount = allRiders.filter((r: any) => r.status === 'approved').length;
   const totalRiders = allRiders.length;
@@ -46,7 +54,7 @@ export default function RidersPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-yellow-100 rounded-full">
@@ -60,7 +68,7 @@ export default function RidersPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-3 bg-green-100 rounded-full">
@@ -76,7 +84,59 @@ export default function RidersPage() {
         </div>
       </div>
 
-      <RidersTable />
+      {/* Search and Sort Controls */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-4">
+          {/* Search Bar */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search riders by name, email, phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="approved">Approved</option>
+              <option value="pending_hospital_approval">Pending Approval</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
+          {/* Sort Controls */}
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-5 h-5 text-gray-500" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="status">Sort by Status</option>
+              <option value="deliveries">Sort by Deliveries</option>
+              <option value="created">Sort by Date Joined</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              {sortOrder === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <RidersTable searchTerm={searchTerm} statusFilter={statusFilter} sortBy={sortBy} sortOrder={sortOrder} />
     </div>
   );
 }

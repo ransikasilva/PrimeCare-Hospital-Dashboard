@@ -4,35 +4,83 @@ import { useHospitalDashboard, usePendingApprovals, useMyHospitals, useApproveCo
 import { useState } from "react";
 import { CollectionCenterModal } from "./CollectionCenterModal";
 
-export function CentersTable() {
+interface CentersTableProps {
+  searchTerm?: string;
+  statusFilter?: string;
+  typeFilter?: string;
+  sortBy?: 'name' | 'status' | 'type' | 'created';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter = 'all', sortBy = 'name', sortOrder = 'asc' }: CentersTableProps) {
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [selectedCenter, setSelectedCenter] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { approveCenter, loading: approveLoading } = useApproveCollectionCenter();
-  
+
   const { data: dashboardData, loading: dashboardLoading, refetch: refetchDashboard } = useHospitalDashboard();
   const { data: hospitalsData } = useMyHospitals();
   const hospitalId = hospitalsData?.data?.hospitals?.[0]?.id;
   console.log('🔍 hospitalId being passed to usePendingApprovals:', hospitalId, typeof hospitalId);
   const { data: pendingData, loading: pendingLoading, refetch: refetchPending } = usePendingApprovals(hospitalId || '');
-  
+
   // Force refresh pending data when hospitalId changes
   useState(() => {
     if (hospitalId) {
       refetchPending();
     }
   });
-  
+
   // Get all centers from dashboard (now includes pending ones too)
   const allCenters = (dashboardData as any)?.data?.collection_centers || [];
   const pendingCenters = (pendingData as any)?.data?.collection_centers || [];
-  
+
   // Combine and deduplicate centers by ID
   const centerMap = new Map();
   [...allCenters, ...pendingCenters].forEach(center => {
     centerMap.set(center.id, center);
   });
-  const centers = Array.from(centerMap.values());
+  let centers = Array.from(centerMap.values());
+
+  // Apply status filter
+  if (statusFilter !== 'all') {
+    centers = centers.filter((center: any) => center.status === statusFilter);
+  }
+
+  // Apply type filter
+  if (typeFilter !== 'all') {
+    centers = centers.filter((center: any) => center.center_type === typeFilter);
+  }
+
+  // Apply search filter
+  if (searchTerm) {
+    centers = centers.filter((center: any) =>
+      center.center_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      center.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      center.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      center.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  // Apply sorting
+  centers = centers.sort((a: any, b: any) => {
+    let compareValue = 0;
+    switch (sortBy) {
+      case 'name':
+        compareValue = (a.center_name || '').localeCompare(b.center_name || '');
+        break;
+      case 'status':
+        compareValue = (a.status || '').localeCompare(b.status || '');
+        break;
+      case 'type':
+        compareValue = (a.center_type || '').localeCompare(b.center_type || '');
+        break;
+      case 'created':
+        compareValue = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        break;
+    }
+    return sortOrder === 'asc' ? compareValue : -compareValue;
+  });
   
   // Separate for display counts
   const activeCenters = centers.filter(c => c.status === 'approved' || c.status === 'active');

@@ -32,9 +32,9 @@ export default function OrdersPage() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <select 
+          <select
             className="px-3 py-2 border rounded-lg transition-all duration-200 focus:border-teal-500 focus:outline-none"
-            style={{ 
+            style={{
               borderColor: '#E5E7EB',
               backgroundColor: '#FFFFFF',
               color: '#2C3E50'
@@ -43,7 +43,6 @@ export default function OrdersPage() {
             onChange={(e) => setPriorityFilter(e.target.value)}
           >
             <option>All Priorities</option>
-            <option>Emergency</option>
             <option>Urgent</option>
             <option>Routine</option>
           </select>
@@ -58,11 +57,11 @@ export default function OrdersPage() {
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">All Status</option>
-            <option value="pending_rider_assignment">pending_rider_assignment</option>
-            <option value="assigned">assigned</option>
-            <option value="picked_up">picked up</option>
-            <option value="delivered">delivered</option>
-            <option value="cancelled">cancelled</option>
+            <option value="pending_rider_assignment">Pending Assignment</option>
+            <option value="assigned">Assigned</option>
+            <option value="picked_up">Picked Up</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
           </select>
           <button
             className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90"
