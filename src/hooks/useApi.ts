@@ -348,9 +348,13 @@ export function useRiderPerformanceReport(params?: {
   period?: string;
   hospital_id?: string;
 }) {
+  const hospitalId = params?.hospital_id || '';
+  const queryParams = new URLSearchParams();
+  if (params?.period) queryParams.append('period', params.period);
+
   return useApi(
-    () => apiClient.getRiderPerformanceReport(params),
-    [params]
+    () => hospitalId ? apiClient.getRiderPerformanceReport(hospitalId, queryParams.toString()) : Promise.resolve({ success: true, data: {} } as any),
+    [hospitalId, params?.period]
   );
 }
 
@@ -382,7 +386,7 @@ export function useMyHospitals() {
 // Get pending riders for current hospital (riders with pending_hospital_approval status)
 export function usePendingApprovals(hospitalId: string | undefined) {
   return useApi(
-    () => hospitalId ? apiClient.getPendingRiders(hospitalId) : Promise.resolve({ success: true, data: { riders: [] } } as any),
+    () => hospitalId ? apiClient.getPendingApprovals(hospitalId) : Promise.resolve({ success: true, data: { collection_centers: [], riders: [], total: 0 } } as any),
     [hospitalId]
   );
 }

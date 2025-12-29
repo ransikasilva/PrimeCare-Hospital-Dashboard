@@ -35,6 +35,11 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
   const allCenters = (dashboardData as any)?.data?.collection_centers || [];
   const pendingCenters = (pendingData as any)?.data?.collection_centers || [];
 
+  console.log('📊 Data sources:');
+  console.log('  - allCenters:', allCenters.length, allCenters.map((c: any) => c.center_name));
+  console.log('  - pendingCenters:', pendingCenters.length, pendingCenters.map((c: any) => c.center_name));
+  console.log('  - pendingData full:', pendingData);
+
   // Combine and deduplicate centers by ID
   const centerMap = new Map();
   [...allCenters, ...pendingCenters].forEach(center => {
@@ -42,9 +47,18 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
   });
   let centers = Array.from(centerMap.values());
 
-  // Apply status filter
+  console.log('📋 Combined centers:', centers.length, centers.map((c: any) => ({ name: c.center_name, hospital_status: c.hospital_approval_status, overall: c.status })));
+
+  // Apply status filter - use hospital_approval_status if available (for multi-hospital centers)
   if (statusFilter !== 'all') {
-    centers = centers.filter((center: any) => center.status === statusFilter);
+    centers = centers.filter((center: any) => {
+      const displayStatus = center.hospital_approval_status || center.status;
+      const matches = displayStatus === statusFilter;
+      if (statusFilter === 'rejected') {
+        console.log('🔍 Filtering rejected:', center.center_name, 'hospital_approval_status:', center.hospital_approval_status, 'hq_approval_status:', center.hq_approval_status, 'status:', center.status, 'displayStatus:', displayStatus, 'matches:', matches);
+      }
+      return matches;
+    });
   }
 
   // Apply type filter
@@ -340,9 +354,10 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.relation_status || center.status)}`}>
-                      {(center.relation_status === 'pending' ? 'Pending Approval' :
-                        center.relation_status === 'approved' ? 'Approved' :
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.hospital_approval_status || center.status)}`}>
+                      {(center.hospital_approval_status === 'pending' ? 'Pending Approval' :
+                        center.hospital_approval_status === 'approved' ? 'Approved' :
+                        center.hospital_approval_status === 'rejected' ? 'Rejected' :
                         center.status === 'approved' ? 'Active' :
                         center.status === 'pending_hospital_approval' ? 'Pending Hospital Approval' :
                         center.status === 'pending_hq_approval' ? 'Pending HQ Approval' :
