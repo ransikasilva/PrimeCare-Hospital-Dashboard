@@ -31,6 +31,7 @@ interface CollectionCenter {
   contact_person: string;
   phone: string;
   city: string;
+  address?: string;
   status: string;
   coordinates_lat: number;
   coordinates_lng: number;
@@ -89,36 +90,56 @@ export function LiveMap() {
         return dashboardCenters;
       }
     }
-    
+
     // Try the dedicated collection centers endpoint
     if (centersData?.data?.collection_centers) {
-      return centersData.data.collection_centers.filter((center: any) => 
+      return centersData.data.collection_centers.filter((center: any) =>
         center.coordinates_lat && center.coordinates_lng
       );
     }
-    
+
     // Fallback to pending approvals data - but filter for only centers approved by this hospital
     if (approvalsData?.data?.collection_centers) {
       return approvalsData.data.collection_centers.filter((center: any) => {
         // Only show centers that have GPS coordinates AND are approved by this specific hospital
         const hasCoordinates = center.coordinates_lat && center.coordinates_lng;
-        const isApprovedByThisHospital = (center.status === 'approved' || center.status === 'pending_hq_approval') && 
+        const isApprovedByThisHospital = (center.status === 'approved' || center.status === 'pending_hq_approval') &&
           (center.approved_by_hospital === hospitalId || center.hospital_id === hospitalId);
-        
-        console.log('LiveMap - Filtering center:', center.center_name, 
-          'hasCoordinates:', hasCoordinates, 
+
+        console.log('LiveMap - Filtering center:', center.center_name,
+          'hasCoordinates:', hasCoordinates,
           'status:', center.status,
           'approved_by_hospital:', center.approved_by_hospital,
           'hospital_id:', center.hospital_id,
           'isApprovedByThisHospital:', isApprovedByThisHospital);
-        
+
         return hasCoordinates && isApprovedByThisHospital;
       });
     }
-    
+
     // Only show real collection centers from API - no mock data
     return [];
   }, [dashboardData, centersData, approvalsData, hospitalId]);
+
+  // Extract hospitals safely - current hospital and regional hospitals if main hospital
+  const hospitals: any[] = useMemo(() => {
+    const hospitalsList: any[] = [];
+
+    if (hospitalsData?.data?.hospitals) {
+      const allHospitals = hospitalsData.data.hospitals;
+      console.log('LiveMap - All hospitals data:', allHospitals);
+
+      // Add all hospitals with coordinates
+      allHospitals.forEach((hospital: any) => {
+        if (hospital.coordinates_lat && hospital.coordinates_lng) {
+          hospitalsList.push(hospital);
+        }
+      });
+    }
+
+    console.log('LiveMap - Processed hospitals for map:', hospitalsList);
+    return hospitalsList;
+  }, [hospitalsData]);
 
   // Debug logging (remove in production)
   if (process.env.NODE_ENV === 'development') {
@@ -457,10 +478,12 @@ export function LiveMap() {
                 <span class="w-20 text-gray-600">Phone:</span>
                 <span class="font-medium">${center.phone}</span>
               </div>
-              <div class="flex items-center">
-                <span class="w-20 text-gray-600">Location:</span>
-                <span class="font-medium">${center.city}</span>
+              ${center.address ? `
+              <div class="flex items-start">
+                <span class="w-20 text-gray-600 flex-shrink-0">Address:</span>
+                <span class="font-medium">${center.address}</span>
               </div>
+              ` : ''}
               <div class="flex items-center">
                 <span class="w-20 text-gray-600">Type:</span>
                 <span class="inline-block px-2 py-1 bg-teal-100 text-teal-800 rounded text-xs font-medium">${center.center_type}</span>
@@ -494,6 +517,108 @@ export function LiveMap() {
       });
 
       console.log('LiveMap - Added center marker:', center.center_name);
+      newMarkers.push(marker);
+    });
+
+    // Add markers for hospitals
+    hospitals.forEach((hospital) => {
+      console.log('LiveMap - Processing hospital:', hospital.hospital_name, { lat: hospital.coordinates_lat, lng: hospital.coordinates_lng });
+      if (!hospital.coordinates_lat || !hospital.coordinates_lng) return;
+
+      const lat = parseFloat(hospital.coordinates_lat.toString());
+      const lng = parseFloat(hospital.coordinates_lng.toString());
+
+      // Check if this is the current logged-in hospital
+      const isCurrentHospital = hospital.id === hospitalId;
+
+      // Use different icon for current hospital vs regional hospitals
+      const hospitalIcon = isCurrentHospital ? '🏥' : '🏨';
+      const hospitalColor = isCurrentHospital ? '#4ECDC4' : '#8B5CF6'; // Teal for current, purple for regional
+
+      // Create custom marker for hospital
+      const marker = new window.google.maps.Marker({
+        position: { lat, lng },
+        map: map,
+        title: `${hospital.hospital_name} - ${hospital.hospital_type || 'Hospital'}`,
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="22" cy="22" r="20" fill="${hospitalColor}" stroke="#FFFFFF" stroke-width="3"/>
+              <text x="22" y="28" text-anchor="middle" fill="white" font-family="Arial" font-size="14" font-weight="bold">${hospitalIcon}</text>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(44, 44),
+          anchor: new window.google.maps.Point(22, 22),
+        },
+        label: {
+          text: hospital.hospital_name,
+          color: '#1F2937',
+          fontSize: '13px',
+          fontWeight: 'bold',
+          className: 'map-marker-label'
+        },
+        zIndex: isCurrentHospital ? 1000 : 500 // Current hospital appears on top
+      });
+
+      // Create detailed info window for hospital
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div class="p-3 min-w-64">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">${hospitalIcon}</span>
+              <h3 class="font-bold text-gray-900 text-lg">${hospital.hospital_name}</h3>
+            </div>
+            ${isCurrentHospital ? '<div class="mb-2"><span class="inline-block px-2 py-1 bg-teal-100 text-teal-800 rounded text-xs font-bold">📍 Your Hospital</span></div>' : ''}
+            <div class="space-y-1 text-sm">
+              ${hospital.admin_name ? `
+              <div class="flex items-center">
+                <span class="w-20 text-gray-600">Admin:</span>
+                <span class="font-medium">${hospital.admin_name}</span>
+              </div>
+              ` : ''}
+              ${hospital.admin_phone ? `
+              <div class="flex items-center">
+                <span class="w-20 text-gray-600">Phone:</span>
+                <span class="font-medium">${hospital.admin_phone}</span>
+              </div>
+              ` : ''}
+              ${hospital.address ? `
+              <div class="flex items-start">
+                <span class="w-20 text-gray-600 flex-shrink-0">Address:</span>
+                <span class="font-medium">${hospital.address}</span>
+              </div>
+              ` : ''}
+              <div class="flex items-center">
+                <span class="w-20 text-gray-600">Type:</span>
+                <span class="inline-block px-2 py-1 ${hospital.hospital_type === 'main' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'} rounded text-xs font-medium">${hospital.hospital_type || 'Hospital'}</span>
+              </div>
+              ${hospital.network_name ? `
+              <div class="flex items-center">
+                <span class="w-20 text-gray-600">Network:</span>
+                <span class="font-medium">${hospital.network_name}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+        `,
+        maxWidth: 320
+      });
+
+      // Add hover effect
+      marker.addListener('mouseover', () => {
+        infoWindow.open(map, marker);
+      });
+
+      marker.addListener('mouseout', () => {
+        infoWindow.close();
+      });
+
+      // Also show on click for mobile devices
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+      });
+
+      console.log('LiveMap - Added hospital marker:', hospital.hospital_name, isCurrentHospital ? '(Current Hospital)' : '(Regional Hospital)');
       newMarkers.push(marker);
     });
 
@@ -575,7 +700,7 @@ export function LiveMap() {
       map.setZoom(11);
     }
 
-  }, [map, riders, collectionCenters]);
+  }, [map, riders, collectionCenters, hospitals, hospitalId]);
 
   if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
@@ -755,6 +880,13 @@ export function LiveMap() {
                 <span className="text-sm text-gray-600">Centers ({centerCounts.total})</span>
               </div>
             </div>
+            {/* Hospitals */}
+            <div className="border-l border-gray-300 pl-4 ml-4">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-600">Hospitals ({hospitals.length})</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -771,20 +903,6 @@ export function LiveMap() {
           backgroundColor: '#f0f0f0' // Temporary background to see if container is visible
         }}
       />
-      
-      {/* Status Bar */}
-      <div className="p-4 bg-gray-50 border-t">
-        <div className="text-sm text-gray-600">
-          <p><strong>Debug Info:</strong></p>
-          <p>Riders: {riders.length} | Centers: {collectionCenters.length}</p>
-          <p>Hospital ID: {hospitalId || 'Not set'}</p>
-          <p>Riders Loading: {ridersLoading ? 'Yes' : 'No'} | Error: {ridersError || 'None'}</p>
-          <p>Centers Loading: {centersLoading ? 'Yes' : 'No'}</p>
-          {riders.length === 0 && collectionCenters.length === 0 && !ridersLoading && !centersLoading && !approvalsLoading && (
-            <p className="text-red-600 mt-2">⚠️ No data found - check API connection and authentication</p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

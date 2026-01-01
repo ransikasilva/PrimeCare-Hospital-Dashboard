@@ -984,8 +984,8 @@ export function CollectionCenterModal({
                       </button>
                     )}
 
-                    {/* Show Approve button if THIS hospital hasn't approved yet (check hospital_approval_status) */}
-                    {(center.hospital_approval_status === "pending" || center.status === "pending_hospital_approval") && (
+                    {/* Show Approve button if THIS hospital hasn't approved yet or if rejected (for re-approval) */}
+                    {(center.hospital_approval_status === "pending" || center.hospital_approval_status === "rejected" || center.status === "pending_hospital_approval") && (
                       <button
                         onClick={handleApprove}
                         disabled={isProcessing}
@@ -998,7 +998,7 @@ export function CollectionCenterModal({
                       >
                         <div className="flex items-center space-x-2">
                           <CheckCircle2 className="w-5 h-5" />
-                          <span>{isProcessing ? 'Approving...' : 'Approve Center'}</span>
+                          <span>{isProcessing ? 'Approving...' : (center.hospital_approval_status === "rejected" ? 'Re-approve Center' : 'Approve Center')}</span>
                         </div>
                       </button>
                     )}

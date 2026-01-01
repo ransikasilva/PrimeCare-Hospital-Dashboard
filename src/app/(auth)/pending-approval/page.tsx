@@ -74,9 +74,36 @@ export default function PendingApprovalPage() {
     router.push('/login');
   };
 
-  const handleRefreshStatus = () => {
-    // Force a page refresh to check latest status
-    window.location.reload();
+  const handleRefreshStatus = async () => {
+    // Clear auth cache and force re-fetch from backend
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.status === 'approved') {
+            // User has been approved! Redirect to dashboard
+            window.location.href = '/dashboard';
+          } else {
+            // Still pending, reload the page to update the display
+            window.location.reload();
+          }
+        } else {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error refreshing status:', error);
+        window.location.reload();
+      }
+    } else {
+      window.location.reload();
+    }
   };
 
   if (isLoading) {
@@ -255,7 +282,7 @@ export default function PendingApprovalPage() {
           <Button
             onClick={handleRefreshStatus}
             variant="outline"
-            className="flex-1"
+            className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             <Clock className="w-4 h-4 mr-2" />
             Refresh Status
@@ -263,7 +290,7 @@ export default function PendingApprovalPage() {
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="flex-1"
+            className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
           >
             Logout
           </Button>

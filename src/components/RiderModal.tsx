@@ -743,7 +743,7 @@ export function RiderModal({
                       </button>
                     )}
 
-                    {/* Show Approve button only if not already approved */}
+                    {/* Show Approve button only if not already approved or if rejected (for re-approval) */}
                     {rider.status !== "approved" && (
                       <button
                         onClick={handleApprove}
@@ -757,7 +757,7 @@ export function RiderModal({
                       >
                         <div className="flex items-center space-x-2">
                           <CheckCircle2 className="w-5 h-5" />
-                          <span>{isProcessing ? 'Approving...' : 'Approve Rider'}</span>
+                          <span>{isProcessing ? 'Approving...' : (rider.status === "rejected" ? 'Re-approve Rider' : 'Approve Rider')}</span>
                         </div>
                       </button>
                     )}

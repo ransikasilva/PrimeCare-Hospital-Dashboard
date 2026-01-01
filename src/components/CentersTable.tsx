@@ -297,22 +297,25 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Center
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Location
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Hospital Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                HQ Approval
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Active Orders
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Last Pickup
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -320,70 +323,91 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
           <tbody className="bg-white divide-y divide-gray-200">
             {centers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                   No collection centers found
                 </td>
               </tr>
             ) : (
-              centers.map((center: any) => (
-                <tr key={center.id} className="hover:bg-teal-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewCenter(center)}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-2 h-12 bg-green-400 rounded-l-md mr-3"></div>
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center border border-green-300">
-                        <span className="text-green-700 font-bold text-sm">
-                          {(center.center_name || center.name || 'CC').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className={`text-sm ${getCenterNameColor(center.center_name || center.name)}`}>
-                          {center.center_name || center.name}
+              centers.map((center: any) => {
+                // Helper function to get HQ approval status based on global status
+                const getHQApprovalStatus = (status: string) => {
+                  if (status === 'pending_hospital_approval' || status === 'pending_hq_approval') {
+                    return { text: 'Pending', color: 'bg-yellow-100 text-yellow-800 border border-yellow-200 shadow-sm' };
+                  } else if (status === 'approved') {
+                    return { text: 'Approved', color: 'bg-green-100 text-green-800 border border-green-200 shadow-sm' };
+                  } else if (status === 'rejected') {
+                    return { text: 'Rejected', color: 'bg-red-100 text-red-800 border border-red-200 shadow-sm' };
+                  }
+                  return { text: status, color: 'bg-gray-100 text-gray-800 border border-gray-200 shadow-sm' };
+                };
+
+                const hqStatus = getHQApprovalStatus(center.status);
+
+                return (
+                  <tr key={center.id} className="hover:bg-teal-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewCenter(center)}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-2 h-12 bg-green-400 rounded-l-md mr-3"></div>
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center border border-green-300">
+                          <span className="text-green-700 font-bold text-sm">
+                            {(center.center_name || center.name || 'CC').split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                          </span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">{center.center_type || 'Independent'}</div>
+                        <div className="ml-4">
+                          <div className={`text-sm ${getCenterNameColor(center.center_name || center.name)}`}>
+                            {center.center_name || center.name}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">{center.center_type || 'Independent'}</div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div className="max-w-xs truncate" title={center.address || center.city || center.location || 'N/A'}>
-                      {center.address || center.city || center.location || 'N/A'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(center.center_type || center.type)}`}>
-                      {center.center_type || center.type || 'Independent'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.hospital_approval_status || center.status)}`}>
-                      {(center.hospital_approval_status === 'pending' ? 'Pending Approval' :
-                        center.hospital_approval_status === 'approved' ? 'Approved' :
-                        center.hospital_approval_status === 'rejected' ? 'Rejected' :
-                        center.status === 'approved' ? 'Active' :
-                        center.status === 'pending_hospital_approval' ? 'Pending Hospital Approval' :
-                        center.status === 'pending_hq_approval' ? 'Pending HQ Approval' :
-                        center.status === 'active' ? 'Active' :
-                        center.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="font-medium">{center.active_orders || 0}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {center.last_pickup || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button 
-                      className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors duration-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewCenter(center);
-                      }}
-                    >
-                      View Details
-                    </button>
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-center">
+                      <div className="max-w-xs truncate mx-auto" title={center.address || center.city || center.location || 'N/A'}>
+                        {center.address || center.city || center.location || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(center.center_type || center.type)}`}>
+                        {center.center_type || center.type || 'Independent'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(center.hospital_approval_status || center.status)}`}>
+                        {(center.hospital_approval_status === 'pending' ? 'Pending' :
+                          center.hospital_approval_status === 'approved' ? 'Approved' :
+                          center.hospital_approval_status === 'rejected' ? 'Rejected' :
+                          center.status === 'approved' ? 'Approved' :
+                          center.status === 'pending_hospital_approval' ? 'Pending' :
+                          center.status === 'pending_hq_approval' ? 'Pending' :
+                          center.status === 'active' ? 'Approved' :
+                          center.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${hqStatus.color}`}>
+                        {hqStatus.text}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                      <span className="font-medium">{center.active_orders || 0}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                      {center.last_pickup || 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                      <button
+                        className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewCenter(center);
+                        }}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
