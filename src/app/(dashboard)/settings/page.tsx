@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useMyHospitals, useOrders, usePendingApprovals, useHospitalDashboard } from '@/hooks/useApi';
 import { apiClient } from '@/lib/api';
-import { 
-  Phone, Monitor, Bell, AlertTriangle, Users, Building2, 
+import {
+  Phone, Monitor, Bell, AlertTriangle, Users, Building2,
   Clock, Wifi, Database, Save, RotateCcw,
-  MessageSquare, Radio 
+  MessageSquare, Radio, Route
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -33,6 +33,11 @@ export default function SettingsPage() {
   const [sendingSms, setSendingSms] = useState(false);
   const [realRiderCount, setRealRiderCount] = useState(0);
   const [realCenterCount, setRealCenterCount] = useState(0);
+
+  // Distance calculation settings
+  const [distanceMode, setDistanceMode] = useState<'full' | 'pickup_only'>('full');
+  const [loadingDistance, setLoadingDistance] = useState(true);
+  const [savingDistance, setSavingDistance] = useState(false);
 
   // Get current hospital data and real counts
   const { data: hospitalsData, loading } = useMyHospitals();
@@ -103,6 +108,28 @@ export default function SettingsPage() {
 
     fetchCounts();
   }, [hospitalId, dashboardData]);
+
+  // Fetch distance calculation mode
+  useEffect(() => {
+    const fetchDistanceMode = async () => {
+      if (!hospitalId) return;
+
+      try {
+        setLoadingDistance(true);
+        const response = await apiClient.getDistanceCalculationMode(hospitalId);
+
+        if (response.success && response.data) {
+          setDistanceMode(response.data.distance_calculation_mode);
+        }
+      } catch (error) {
+        console.error('Failed to fetch distance calculation mode:', error);
+      } finally {
+        setLoadingDistance(false);
+      }
+    };
+
+    fetchDistanceMode();
+  }, [hospitalId]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -199,6 +226,29 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveDistanceMode = async () => {
+    if (!hospitalId) {
+      alert('Hospital ID not found. Please refresh the page.');
+      return;
+    }
+
+    setSavingDistance(true);
+    try {
+      const response = await apiClient.updateDistanceCalculationMode(hospitalId, distanceMode);
+
+      if (response.success) {
+        alert('Distance calculation settings saved successfully!');
+      } else {
+        throw new Error(response.error?.message || 'Failed to save settings');
+      }
+    } catch (error: any) {
+      console.error('Error saving distance settings:', error);
+      alert(error.message || 'Failed to save settings');
+    } finally {
+      setSavingDistance(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -224,6 +274,7 @@ export default function SettingsPage() {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'general', name: 'General Settings', icon: Building2 },
+            { id: 'distance', name: 'Distance Calculation', icon: Route },
             { id: 'send', name: 'Send SMS Notifications', icon: MessageSquare }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -397,6 +448,144 @@ export default function SettingsPage() {
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-4">Last system check: 30 seconds ago</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'distance' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Rider Distance Calculation</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Configure how rider travel distance is calculated for payment purposes
+              </p>
+            </div>
+
+            {loadingDistance ? (
+              <div className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 space-y-6">
+                <div className="space-y-4">
+                  {/* Full Mode Option */}
+                  <div
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      distanceMode === 'full'
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setDistanceMode('full')}
+                  >
+                    <div className="flex items-start">
+                      <input
+                        type="radio"
+                        id="full-mode"
+                        name="distance-mode"
+                        value="full"
+                        checked={distanceMode === 'full'}
+                        onChange={() => setDistanceMode('full')}
+                        className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300"
+                      />
+                      <div className="ml-3 flex-1">
+                        <label htmlFor="full-mode" className="block font-medium text-gray-900 cursor-pointer">
+                          Full Distance Tracking
+                        </label>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Count ALL distance from the moment the order is assigned/accepted until delivery is completed.
+                        </p>
+                        <div className="mt-3 bg-white p-3 rounded border border-gray-200">
+                          <p className="text-xs font-medium text-gray-700 mb-2">Example:</p>
+                          <ul className="text-xs text-gray-600 space-y-1">
+                            <li>• Rider at location A when order assigned</li>
+                            <li>• Travels to Collection Center B (5 km) - <span className="font-semibold text-teal-700">COUNTED</span></li>
+                            <li>• Picks up samples from B</li>
+                            <li>• Travels to Hospital C (10 km) - <span className="font-semibold text-teal-700">COUNTED</span></li>
+                            <li className="pt-1 border-t border-gray-200 font-semibold text-gray-900">
+                              Total rider payment: 15 km
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pickup Only Mode Option */}
+                  <div
+                    className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      distanceMode === 'pickup_only'
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setDistanceMode('pickup_only')}
+                  >
+                    <div className="flex items-start">
+                      <input
+                        type="radio"
+                        id="pickup-only-mode"
+                        name="distance-mode"
+                        value="pickup_only"
+                        checked={distanceMode === 'pickup_only'}
+                        onChange={() => setDistanceMode('pickup_only')}
+                        className="mt-1 h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300"
+                      />
+                      <div className="ml-3 flex-1">
+                        <label htmlFor="pickup-only-mode" className="block font-medium text-gray-900 cursor-pointer">
+                          From First Pickup Only
+                        </label>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Exclude the distance to the first pickup location. Only count distance from the first pickup onwards.
+                        </p>
+                        <div className="mt-3 bg-white p-3 rounded border border-gray-200">
+                          <p className="text-xs font-medium text-gray-700 mb-2">Example:</p>
+                          <ul className="text-xs text-gray-600 space-y-1">
+                            <li>• Rider at location A when order assigned</li>
+                            <li>• Travels to Collection Center B (5 km) - <span className="font-semibold text-red-700">NOT COUNTED</span></li>
+                            <li>• Picks up samples from B</li>
+                            <li>• Travels to Hospital C (10 km) - <span className="font-semibold text-teal-700">COUNTED</span></li>
+                            <li className="pt-1 border-t border-gray-200 font-semibold text-gray-900">
+                              Total rider payment: 10 km
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Important Note */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-900">
+                      <p className="font-semibold mb-1">Important Notes:</p>
+                      <ul className="space-y-1 list-disc list-inside">
+                        <li>This setting applies to all routes and affects rider payment calculations</li>
+                        <li>In multi-parcel scenarios, only the distance to the FIRST pickup (chronologically) is excluded</li>
+                        <li>For handovers, this applies to each rider's segment separately</li>
+                        <li>Changes take effect immediately for new orders</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleSaveDistanceMode}
+                    disabled={savingDistance}
+                    className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    {savingDistance ? 'Saving...' : 'Save Distance Settings'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

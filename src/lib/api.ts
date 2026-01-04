@@ -754,6 +754,18 @@ class ApiClient {
   async getRiderPerformanceReport(hospitalId: string, params: string) {
     return this.request<any>(`/api/reports/${hospitalId}/rider-performance?${params}`);
   }
+
+  // Distance calculation mode settings
+  async getDistanceCalculationMode(hospitalId: string) {
+    return this.request<any>(`/api/hospitals/${hospitalId}/distance-mode`);
+  }
+
+  async updateDistanceCalculationMode(hospitalId: string, mode: 'full' | 'pickup_only') {
+    return this.request<any>(`/api/hospitals/${hospitalId}/distance-mode`, {
+      method: 'PUT',
+      body: JSON.stringify({ mode }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_URL);
