@@ -11,6 +11,7 @@ import {
   XCircle,
   AlertTriangle,
   User,
+  Users,
   MapPin,
   Phone,
   Calendar,
@@ -79,12 +80,17 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
       // Fetch detailed order information with tracking data
       const orderResponse = await apiClient.getOrderDetailsWithTracking(orderId);
       console.log('Order response:', orderResponse);
+      console.log('Full order response data:', JSON.stringify(orderResponse.data, null, 2));
+
       const order = orderResponse.data?.order;
       const locationTracking = orderResponse.data?.location_tracking || [];
       const qrScansData = orderResponse.data?.qr_scans || [];
+      const handoverData = orderResponse.data?.handover;
 
       console.log('Location tracking data:', locationTracking);
       console.log('Location tracking length:', locationTracking.length);
+      console.log('Handover data:', handoverData);
+      console.log('Handover exists?', !!handoverData);
 
       if (!order) {
         setError('Order not found');
@@ -97,8 +103,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
       setOrderDetails({
         order,
         qr_scans: qrScansData,
-        location_tracking: locationTracking
-      });
+        location_tracking: locationTracking,
+        handover: handoverData
+      } as any);
 
     } catch (err: any) {
       setError(err.message || 'Failed to load order details');
@@ -138,7 +145,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Colombo'
     });
   };
 
@@ -147,7 +156,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
     return new Date(dateString).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      timeZone: 'Asia/Colombo'
     });
   };
 
@@ -417,27 +427,149 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                     </div>
                   </div>
 
+                  {/* Handover Information - Show if handover occurred */}
+                  {(orderDetails as any)?.handover && (
+                    <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Route className="w-5 h-5 text-orange-600" />
+                        <h3 className="font-semibold text-orange-900">Handover Occurred</h3>
+                        <span className={`ml-auto text-xs px-2 py-1 rounded ${
+                          (orderDetails as any).handover.status === 'confirmed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {(orderDetails as any).handover.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        {/* Original Rider (Rider A) */}
+                        <div className="bg-white border border-orange-200 rounded-lg p-3">
+                          <label className="text-xs font-medium text-orange-700 uppercase">Original Rider (Pickup)</label>
+                          <div className="mt-2 space-y-1">
+                            <p className="font-semibold text-gray-900">{(orderDetails as any).handover.original_rider.name}</p>
+                            <p className="text-sm text-gray-600">{(orderDetails as any).handover.original_rider.phone}</p>
+                            <p className="text-xs text-gray-500">{(orderDetails as any).handover.original_rider.vehicle || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        {/* New Rider (Rider B) */}
+                        <div className="bg-white border border-orange-200 rounded-lg p-3">
+                          <label className="text-xs font-medium text-orange-700 uppercase">New Rider (Delivery)</label>
+                          <div className="mt-2 space-y-1">
+                            <p className="font-semibold text-gray-900">{(orderDetails as any).handover.new_rider.name}</p>
+                            <p className="text-sm text-gray-600">{(orderDetails as any).handover.new_rider.phone}</p>
+                            <p className="text-xs text-gray-500">{(orderDetails as any).handover.new_rider.vehicle || 'N/A'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Handover Reason */}
+                      {(orderDetails as any).handover.reason && (
+                        <div className="bg-white border border-orange-200 rounded-lg p-3 mb-3">
+                          <label className="text-xs font-medium text-orange-700 uppercase">Handover Reason</label>
+                          <p className="text-sm text-gray-900 mt-1">{(orderDetails as any).handover.reason}</p>
+                        </div>
+                      )}
+
+                      {/* Handover Timeline */}
+                      <div className="grid grid-cols-3 gap-3 text-xs">
+                        <div className="bg-white border border-orange-200 rounded p-2">
+                          <label className="text-orange-700 font-medium">Initiated</label>
+                          <p className="text-gray-900 mt-1">
+                            {new Date((orderDetails as any).handover.initiated_at).toLocaleString('en-US', { timeZone: 'Asia/Colombo' })}
+                          </p>
+                        </div>
+                        {(orderDetails as any).handover.accepted_at && (
+                          <div className="bg-white border border-orange-200 rounded p-2">
+                            <label className="text-orange-700 font-medium">Accepted</label>
+                            <p className="text-gray-900 mt-1">
+                              {new Date((orderDetails as any).handover.accepted_at).toLocaleString('en-US', { timeZone: 'Asia/Colombo' })}
+                            </p>
+                          </div>
+                        )}
+                        {(orderDetails as any).handover.confirmed_at && (
+                          <div className="bg-white border border-green-600 rounded p-2">
+                            <label className="text-green-700 font-medium">Confirmed</label>
+                            <p className="text-gray-900 mt-1">
+                              {new Date((orderDetails as any).handover.confirmed_at).toLocaleString('en-US', { timeZone: 'Asia/Colombo' })}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Rider Info */}
                   {orderDetails.order?.rider_name && (
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Truck className="w-5 h-5 text-gray-400" />
-                        <h3 className="font-semibold text-gray-900">Assigned Rider</h3>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <label className="text-gray-600">Name</label>
-                          <p className="font-medium text-gray-900">{orderDetails.order.rider_name}</p>
-                        </div>
-                        <div>
-                          <label className="text-gray-600">Phone</label>
-                          <p className="font-medium text-gray-900">{orderDetails.order.rider_phone || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <label className="text-gray-600">Vehicle</label>
-                          <p className="font-medium text-gray-900">{orderDetails.order.vehicle_number || 'N/A'}</p>
-                        </div>
-                      </div>
+                      {(orderDetails as any)?.handover ? (
+                        <>
+                          <div className="flex items-center gap-2 mb-4">
+                            <Users className="w-5 h-5 text-orange-600" />
+                            <h3 className="font-semibold text-gray-900">Rider Information (Handover)</h3>
+                          </div>
+
+                          {/* Original Rider */}
+                          <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <h4 className="text-xs font-semibold text-blue-900 mb-2 uppercase">Original Rider (Pickup)</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <label className="text-gray-600 text-xs">Name</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.original_rider.name}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 text-xs">Phone</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.original_rider.phone || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 text-xs">Vehicle</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.original_rider.vehicle || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* New Rider */}
+                          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                            <h4 className="text-xs font-semibold text-green-900 mb-2 uppercase">Current Rider (Delivery)</h4>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <label className="text-gray-600 text-xs">Name</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.new_rider.name}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 text-xs">Phone</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.new_rider.phone || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <label className="text-gray-600 text-xs">Vehicle</label>
+                                <p className="font-medium text-gray-900">{(orderDetails as any).handover.new_rider.vehicle || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Truck className="w-5 h-5 text-gray-400" />
+                            <h3 className="font-semibold text-gray-900">Assigned Rider</h3>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <label className="text-gray-600">Name</label>
+                              <p className="font-medium text-gray-900">{orderDetails.order.rider_name}</p>
+                            </div>
+                            <div>
+                              <label className="text-gray-600">Phone</label>
+                              <p className="font-medium text-gray-900">{orderDetails.order.rider_phone || 'N/A'}</p>
+                            </div>
+                            <div>
+                              <label className="text-gray-600">Vehicle</label>
+                              <p className="font-medium text-gray-900">{orderDetails.order.vehicle_number || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -488,26 +620,44 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       <h3 className="font-semibold text-gray-900">Order Timeline</h3>
                     </div>
                     <div className="space-y-3">
-                      {[
-                        { label: 'Created', time: orderDetails.order?.created_at, icon: FileText },
-                        { label: 'Assigned', time: orderDetails.order?.assigned_at, icon: User },
-                        { label: 'Pickup Started', time: orderDetails.order?.pickup_started_at, icon: Navigation },
-                        { label: 'Picked Up', time: orderDetails.order?.picked_up_at, icon: CheckCircle2 },
-                        { label: 'Delivery Started', time: orderDetails.order?.delivery_started_at, icon: Truck },
-                        { label: 'Delivered', time: orderDetails.order?.delivered_at, icon: Flag },
-                      ].map((event) => {
-                        const Icon = event.icon;
-                        return (
-                          <div key={event.label} className={`flex items-center gap-3 ${event.time ? '' : 'opacity-40'}`}>
-                            <Icon className={`w-4 h-4 ${event.time ? 'text-green-600' : 'text-gray-400'}`} />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">{event.label}</p>
-                              <p className="text-xs text-gray-600">{formatDate(event.time)}</p>
-                            </div>
-                            {event.time && <CheckCircle2 className="w-5 h-5 text-green-600" />}
-                          </div>
+                      {(() => {
+                        const events = [
+                          { label: 'Created', time: orderDetails.order?.created_at, icon: FileText },
+                          { label: 'Assigned', time: orderDetails.order?.assigned_at, icon: User },
+                          { label: 'Pickup Started', time: orderDetails.order?.pickup_started_at || (orderDetails.order?.picked_up_at ? orderDetails.order.picked_up_at : null), icon: Navigation },
+                          { label: 'Picked Up', time: orderDetails.order?.picked_up_at, icon: CheckCircle2 },
+                        ];
+
+                        // Add handover events if handover occurred
+                        if ((orderDetails as any)?.handover) {
+                          events.push({ label: 'Handover Initiated', time: (orderDetails as any).handover.initiated_at, icon: Route });
+                          if ((orderDetails as any).handover.accepted_at) {
+                            events.push({ label: 'Handover Accepted', time: (orderDetails as any).handover.accepted_at, icon: User });
+                          }
+                          if ((orderDetails as any).handover.confirmed_at) {
+                            events.push({ label: 'Handover Confirmed', time: (orderDetails as any).handover.confirmed_at, icon: CheckCircle2 });
+                          }
+                        }
+
+                        events.push(
+                          { label: 'Delivery Started', time: orderDetails.order?.delivery_started_at || (orderDetails.order?.delivered_at ? orderDetails.order.delivered_at : null), icon: Truck },
+                          { label: 'Delivered', time: orderDetails.order?.delivered_at, icon: Flag }
                         );
-                      })}
+
+                        return events.map((event) => {
+                          const Icon = event.icon;
+                          return (
+                            <div key={event.label} className={`flex items-center gap-3 ${event.time ? '' : 'opacity-40'}`}>
+                              <Icon className={`w-4 h-4 ${event.time ? (event.label.includes('Handover') ? 'text-orange-600' : 'text-green-600') : 'text-gray-400'}`} />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900">{event.label}</p>
+                                <p className="text-xs text-gray-600">{formatDate(event.time)}</p>
+                              </div>
+                              {event.time && <CheckCircle2 className={`w-5 h-5 ${event.label.includes('Handover') ? 'text-orange-600' : 'text-green-600'}`} />}
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
 
@@ -632,7 +782,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       </div>
 
                       {/* 2. Assigned to Rider */}
-                      {orderDetails.order?.rider_name && (
+                      {((orderDetails as any)?.handover || orderDetails.order?.rider_name) && (
                         <div className="relative pl-14">
                           <div className="absolute left-4 top-2 w-4 h-4 bg-teal-600 rounded-full border-2 border-white shadow"></div>
                           <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -653,7 +803,9 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                                   <div className="flex items-center gap-2">
                                     <ArrowRight className="w-4 h-4 text-teal-600" />
                                     <User className="w-4 h-4 text-teal-600" />
-                                    <span className="font-medium text-gray-900">To: {orderDetails.order.rider_name}</span>
+                                    <span className="font-medium text-gray-900">
+                                      To: {(orderDetails as any)?.handover ? (orderDetails as any).handover.original_rider.name : orderDetails.order.rider_name}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -666,9 +818,45 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         </div>
                       )}
 
-                      {/* 3. QR Scans (Pickup confirmation, etc) */}
-                      {orderDetails.qr_scans.map((scan, index) => (
-                        <div key={index} className="relative pl-14">
+                      {/* 3. Picked Up from Collection Center */}
+                      {orderDetails.order?.picked_up_at && (
+                        <div className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Picked Up from Collection Center</h4>
+                                <p className="text-sm text-gray-600">Package Collected</p>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate(orderDetails.order.picked_up_at)}</span>
+                            </div>
+                            <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mt-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MapPin className="w-4 h-4 text-gray-600" />
+                                    <span className="text-sm text-gray-600">From: {orderDetails.order?.center_name || 'Collection Center'}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-blue-600" />
+                                    <User className="w-4 h-4 text-blue-600" />
+                                    <span className="font-medium text-gray-900">
+                                      By: {(orderDetails as any)?.handover ? (orderDetails as any).handover.original_rider.name : orderDetails.order?.rider_name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-2">Package collected and ready for delivery</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 4. Pickup QR Scan (optional verification) */}
+                      {orderDetails.qr_scans
+                        .filter(scan => scan.scan_type === 'pickup')
+                        .map((scan, index) => (
+                        <div key={`pickup-${index}`} className="relative pl-14">
                           <div className="absolute left-4 top-2 w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow"></div>
                           <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                             <div className="flex items-start justify-between mb-2">
@@ -683,8 +871,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                                 <Scan className="w-4 h-4 text-purple-600" />
                                 <span className="font-medium text-gray-900">
                                   Scanned by: {
-                                    scan.scanner_type === 'rider' && orderDetails.order?.rider_name
-                                      ? orderDetails.order.rider_name
+                                    scan.scanner_type === 'rider'
+                                      ? ((orderDetails as any)?.handover ? (orderDetails as any).handover.original_rider.name : orderDetails.order?.rider_name)
                                       : scan.scanned_by || 'System'
                                   }
                                 </span>
@@ -701,7 +889,76 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         </div>
                       ))}
 
-                      {/* 4. Delivered to Hospital */}
+                      {/* 5. Handover Event (if occurred) */}
+                      {(orderDetails as any)?.handover && (orderDetails as any).handover.status === 'confirmed' && (
+                        <div className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-orange-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-orange-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Package Handover</h4>
+                                <p className="text-sm text-gray-600">Rider Transfer</p>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate((orderDetails as any).handover.confirmed_at)}</span>
+                            </div>
+                            <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mt-3">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <User className="w-4 h-4 text-gray-600" />
+                                    <span className="text-sm text-gray-600">From: {(orderDetails as any).handover.original_rider.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <ArrowRight className="w-4 h-4 text-orange-600" />
+                                    <User className="w-4 h-4 text-orange-600" />
+                                    <span className="font-medium text-gray-900">To: {(orderDetails as any).handover.new_rider.name}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-2">Reason: {(orderDetails as any).handover.reason || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 6. Delivery QR Scan */}
+                      {orderDetails.qr_scans
+                        .filter(scan => scan.scan_type === 'delivery')
+                        .map((scan, index) => (
+                        <div key={`delivery-${index}`} className="relative pl-14">
+                          <div className="absolute left-4 top-2 w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow"></div>
+                          <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="font-semibold text-gray-900 capitalize">{scan.scan_type?.replace(/_/g, ' ') || 'QR Scan'}</h4>
+                                <p className="text-sm text-gray-600">Verification Checkpoint</p>
+                              </div>
+                              <span className="text-xs text-gray-500">{formatDate(scan.scanned_at)}</span>
+                            </div>
+                            <div className="bg-purple-50 border-l-4 border-purple-500 p-3 mt-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Scan className="w-4 h-4 text-purple-600" />
+                                <span className="font-medium text-gray-900">
+                                  Scanned by: {
+                                    scan.scanner_type === 'rider'
+                                      ? ((orderDetails as any)?.handover ? (orderDetails as any).handover.new_rider.name : orderDetails.order?.rider_name)
+                                      : scan.scanned_by || 'System'
+                                  }
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 capitalize">Type: {scan.scanner_type || 'N/A'}</p>
+                              {scan.scan_location && (
+                                <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{scan.scan_location}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* 7. Delivered to Hospital */}
                       {orderDetails.order?.status === 'delivered' && (
                         <div className="relative pl-14">
                           <div className="absolute left-4 top-2 w-4 h-4 bg-green-600 rounded-full border-2 border-white shadow"></div>
@@ -927,7 +1184,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                           <span>{orderDetails.location_tracking.length} tracking points recorded</span>
                         </div>
                         <span className="text-xs text-gray-500">
-                          Last update: {new Date(orderDetails.location_tracking[orderDetails.location_tracking.length - 1].recorded_at).toLocaleTimeString()}
+                          Last update: {new Date(orderDetails.location_tracking[orderDetails.location_tracking.length - 1].recorded_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo' })}
                         </span>
                       </div>
                     ) : orderDetails.order?.rider_current_location?.lat && orderDetails.order?.rider_current_location?.lng ? (
@@ -937,7 +1194,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                           <span>Showing rider's current location</span>
                         </div>
                         <span className="text-xs text-gray-500">
-                          Updated: {new Date(orderDetails.order.rider_current_location.updated_at).toLocaleTimeString()}
+                          Updated: {new Date(orderDetails.order.rider_current_location.updated_at).toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo' })}
                         </span>
                       </div>
                     ) : (
