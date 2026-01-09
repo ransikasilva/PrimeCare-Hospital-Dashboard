@@ -35,7 +35,7 @@ export default function SettingsPage() {
   const [realCenterCount, setRealCenterCount] = useState(0);
 
   // Distance calculation settings
-  const [distanceMode, setDistanceMode] = useState<'full' | 'pickup_only'>('full');
+  const [distanceMode, setDistanceMode] = useState<'full' | 'pickup_only' | null>(null);
   const [loadingDistance, setLoadingDistance] = useState(true);
   const [savingDistance, setSavingDistance] = useState(false);
 
@@ -112,17 +112,25 @@ export default function SettingsPage() {
   // Fetch distance calculation mode
   useEffect(() => {
     const fetchDistanceMode = async () => {
-      if (!hospitalId) return;
+      if (!hospitalId) {
+        console.log('⏭️ No hospitalId, skipping distance mode fetch');
+        return;
+      }
 
       try {
+        console.log('🔄 Fetching distance calculation mode for hospital:', hospitalId);
         setLoadingDistance(true);
         const response = await apiClient.getDistanceCalculationMode(hospitalId);
+        console.log('📥 Distance mode response:', response);
 
         if (response.success && response.data) {
+          console.log('✅ Setting distance mode to:', response.data.distance_calculation_mode);
           setDistanceMode(response.data.distance_calculation_mode);
+        } else {
+          console.warn('⚠️ Invalid response structure:', response);
         }
       } catch (error) {
-        console.error('Failed to fetch distance calculation mode:', error);
+        console.error('❌ Failed to fetch distance calculation mode:', error);
       } finally {
         setLoadingDistance(false);
       }
@@ -229,6 +237,11 @@ export default function SettingsPage() {
   const handleSaveDistanceMode = async () => {
     if (!hospitalId) {
       alert('Hospital ID not found. Please refresh the page.');
+      return;
+    }
+
+    if (!distanceMode) {
+      alert('Please select a distance calculation mode.');
       return;
     }
 
