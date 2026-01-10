@@ -663,53 +663,24 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
 
                   {/* Distance Information */}
                   {orderDetails.order?.handover_at ? (
-                    // Handover scenario - show 5 distance cards
+                    // Handover scenario - show only Route Actual KM
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                         <Route className="w-4 h-4" />
-                        <span className="font-medium">Handover Delivery Distances</span>
+                        <span className="font-medium">Handover Delivery Distance</span>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                        <div className="bg-teal-50 p-3 rounded-lg">
-                          <label className="text-xs text-teal-900 font-medium">Pickup</label>
-                          <p className="text-lg font-bold text-teal-900 mt-1">
-                            {orderDetails.order?.pickup_distance_km
-                              ? `${orderDetails.order.pickup_distance_km.toFixed(1)} km`
-                              : '—'}
-                          </p>
-                        </div>
-                        <div className="bg-orange-50 p-3 rounded-lg">
-                          <label className="text-xs text-orange-900 font-medium">Rider A → Handover</label>
-                          <p className="text-lg font-bold text-orange-900 mt-1">
-                            {orderDetails.order?.rider_a_to_handover_km
-                              ? `${orderDetails.order.rider_a_to_handover_km.toFixed(1)} km`
-                              : '—'}
-                          </p>
-                        </div>
-                        <div className="bg-purple-50 p-3 rounded-lg">
-                          <label className="text-xs text-purple-900 font-medium">Rider B → Hospital</label>
-                          <p className="text-lg font-bold text-purple-900 mt-1">
-                            {orderDetails.order?.rider_b_from_handover_km
-                              ? `${orderDetails.order.rider_b_from_handover_km.toFixed(1)} km`
-                              : '—'}
-                          </p>
-                        </div>
-                        <div className="bg-teal-50 p-3 rounded-lg">
-                          <label className="text-xs text-teal-900 font-medium">Delivery Total</label>
-                          <p className="text-lg font-bold text-teal-900 mt-1">
-                            {orderDetails.order?.delivery_distance_km
-                              ? `${orderDetails.order.delivery_distance_km.toFixed(1)} km`
-                              : '—'}
-                          </p>
-                        </div>
-                        <div className="bg-green-50 p-3 rounded-lg">
-                          <label className="text-xs text-green-900 font-medium">Grand Total</label>
-                          <p className="text-lg font-bold text-green-900 mt-1">
-                            {orderDetails.order?.actual_distance_km
-                              ? `${orderDetails.order.actual_distance_km.toFixed(1)} km`
-                              : '—'}
-                          </p>
-                        </div>
+                      <div className="bg-purple-50 p-4 rounded-lg max-w-sm">
+                        <label className="text-sm text-purple-900">
+                          Route Actual KM (Total)
+                        </label>
+                        <p className="text-2xl font-bold text-purple-900 mt-1">
+                          {orderDetails.order?.route_actual_km && orderDetails.order.route_actual_km > 0
+                            ? `${orderDetails.order.route_actual_km.toFixed(1)} km`
+                            : orderDetails.order?.status === 'delivered'
+                              ? 'Not recorded'
+                              : 'In Progress'}
+                        </p>
+                        <p className="text-xs text-purple-700 mt-1">Rider A + Rider B combined distance</p>
                       </div>
                     </div>
                   ) : (
