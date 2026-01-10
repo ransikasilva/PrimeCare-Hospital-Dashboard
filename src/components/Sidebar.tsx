@@ -37,7 +37,10 @@ export function Sidebar() {
   // Calculate counts only if we're on dashboard and have data
   const activeOrders = isDashboardPage && (dashboardData?.data as any)?.orders?.length || 0;
   const activeRiders = isDashboardPage && (dashboardData?.data as any)?.riders?.filter((r: any) => r.availability_status === 'available')?.length || 0;
-  const pendingCenters = (pendingData?.data as any)?.collection_centers?.length || 0;
+  // Only count centers where hospital_approval_status is 'pending'
+  const pendingCenters = (pendingData?.data as any)?.collection_centers?.filter((c: any) => c.hospital_approval_status === 'pending')?.length || 0;
+  // Only count riders with pending_hospital_approval status
+  const pendingRiders = (pendingData?.data as any)?.riders?.filter((r: any) => r.status === 'pending_hospital_approval')?.length || 0;
 
   const baseNavigation = [
     { 
@@ -68,11 +71,11 @@ export function Sidebar() {
       badge: activeRiders > 0 ? activeRiders.toString() : null,
       description: "Real-time GPS monitoring"
     },
-    { 
-      name: "Riders", 
-      href: "/riders", 
+    {
+      name: "Riders",
+      href: "/riders",
       icon: Users,
-      badge: null,
+      badge: pendingRiders > 0 ? pendingRiders.toString() : null,
       description: "Driver management"
     },
     {

@@ -714,7 +714,7 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                     </div>
                   ) : (
                     // Normal delivery - show distance info based on order status
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-teal-50 p-4 rounded-lg">
                         <label className="text-sm text-teal-900">Estimated Distance</label>
                         <p className="text-2xl font-bold text-teal-900 mt-1">
@@ -730,6 +730,18 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                         <p className="text-2xl font-bold text-green-900 mt-1">
                           {orderDetails.order?.actual_distance_km && orderDetails.order.actual_distance_km > 0
                             ? `${orderDetails.order.actual_distance_km.toFixed(1)} km`
+                            : orderDetails.order?.status === 'delivered'
+                              ? 'Not recorded'
+                              : 'In Progress'}
+                        </p>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <label className="text-sm text-purple-900">
+                          Route Actual KM <span className="text-xs">(Demo)</span>
+                        </label>
+                        <p className="text-2xl font-bold text-purple-900 mt-1">
+                          {orderDetails.order?.route_actual_km && orderDetails.order.route_actual_km > 0
+                            ? `${orderDetails.order.route_actual_km.toFixed(1)} km`
                             : orderDetails.order?.status === 'delivered'
                               ? 'Not recorded'
                               : 'In Progress'}

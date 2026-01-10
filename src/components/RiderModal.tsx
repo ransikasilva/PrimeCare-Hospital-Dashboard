@@ -42,9 +42,12 @@ interface Rider {
   created_at: string;
   updated_at?: string;
   emergency_contact?: string;
+  emergency_contact_phone?: string;
   experience_years?: number;
   vehicle_model?: string;
   insurance_number?: string;
+  delivery_experience?: string;
+  areas_known?: string[];
   // Document URLs - backend uses these field names
   profile_image_url?: string;
   license_image_url?: string;
@@ -248,12 +251,6 @@ export function RiderModal({
                     <Phone className="w-5 h-5" />
                     <span className="text-white/90">{rider.phone}</span>
                   </div>
-                  {rider.rating && (
-                    <div className="flex items-center space-x-2">
-                      <Star className="w-5 h-5" />
-                      <span className="text-white/90">{rider.rating} ⭐</span>
-                    </div>
-                  )}
                 </div>
                 
                 <div 
@@ -295,27 +292,15 @@ export function RiderModal({
                       <p className="font-semibold text-gray-800">{rider.phone}</p>
                     </div>
                   </div>
-                  
-                  {rider.email && (
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <Mail className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Email Address</p>
-                        <p className="font-semibold text-gray-800">{rider.email}</p>
-                      </div>
-                    </div>
-                  )}
 
-                  {rider.emergency_contact && (
+                  {(rider.emergency_contact || rider.emergency_contact_phone) && (
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                         <AlertTriangle className="w-6 h-6 text-red-600" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Emergency Contact</p>
-                        <p className="font-semibold text-gray-800">{rider.emergency_contact}</p>
+                        <p className="font-semibold text-gray-800">{rider.emergency_contact_phone || rider.emergency_contact}</p>
                       </div>
                     </div>
                   )}
@@ -353,7 +338,7 @@ export function RiderModal({
                       <p className="font-semibold text-gray-800 capitalize">
                         {rider.vehicle_type || rider.vehicle || 'Motorcycle'}
                       </p>
-                      {rider.vehicle_model && (
+                      {rider.vehicle_model && rider.vehicle_model !== 'Not specified' && (
                         <p className="text-sm text-gray-600">{rider.vehicle_model}</p>
                       )}
                     </div>
@@ -410,6 +395,45 @@ export function RiderModal({
                       </p>
                     </div>
                   </div>
+
+                  {rider.delivery_experience && (
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Delivery Experience</p>
+                        <p className="font-semibold text-gray-800 capitalize">
+                          {rider.delivery_experience === '0' ? 'New Rider' :
+                           rider.delivery_experience === '1-2' ? '1-2 Years' :
+                           rider.delivery_experience === '3-5' ? '3-5 Years' :
+                           rider.delivery_experience === '5+' ? '5+ Years' :
+                           rider.delivery_experience}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {rider.areas_known && rider.areas_known.length > 0 && (
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                        <MapPin className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Areas Known</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {rider.areas_known.map((area, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium capitalize"
+                            >
+                              {area}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                 </div>
               </div>
