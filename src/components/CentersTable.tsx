@@ -41,10 +41,31 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
   console.log('  - pendingData full:', pendingData);
 
   // Combine and deduplicate centers by ID
+  // Merge data properly - allCenters has active_orders and last_pickup, pendingCenters may have updated approval status
   const centerMap = new Map();
-  [...allCenters, ...pendingCenters].forEach(center => {
+
+  // First add all centers with their metrics
+  allCenters.forEach((center: any) => {
     centerMap.set(center.id, center);
   });
+
+  // Then merge pending centers data without overwriting metrics
+  pendingCenters.forEach((center: any) => {
+    const existing = centerMap.get(center.id);
+    if (existing) {
+      // Merge: keep metrics from allCenters, update approval status from pendingCenters
+      centerMap.set(center.id, {
+        ...existing,
+        hospital_approval_status: center.hospital_approval_status || existing.hospital_approval_status,
+        status: center.status || existing.status,
+        // Keep active_orders and last_pickup from allCenters
+      });
+    } else {
+      // New center only in pendingCenters
+      centerMap.set(center.id, center);
+    }
+  });
+
   let centers = Array.from(centerMap.values());
 
   console.log('📋 Combined centers:', centers.length, centers.map((c: any) => ({ name: c.center_name, hospital_status: c.hospital_approval_status, overall: c.status })));

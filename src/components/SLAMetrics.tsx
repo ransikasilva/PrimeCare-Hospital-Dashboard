@@ -30,15 +30,15 @@ export function SLAMetrics({ data, loading }: SLAMetricsProps) {
   }
 
   const metrics = data || {
-    overall_sla: 95.8,
+    overall_sla: 0,
     sla_target: 95,
-    critical_alerts: 12,
-    alerts_change: 4,
-    average_time: 42,
+    critical_alerts: 0,
+    alerts_change: 0,
+    average_time: 0,
     time_target: 45,
-    current_delays: 7,
-    delays_change: 2,
-    delays_since: '1 hour ago'
+    current_delays: 0,
+    delays_change: 0,
+    delays_since: 'N/A'
   };
 
   return (

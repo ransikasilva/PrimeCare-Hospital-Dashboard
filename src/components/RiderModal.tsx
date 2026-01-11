@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from '@/lib/api';
 import {
   X,
   MapPin,
@@ -89,6 +90,13 @@ export function RiderModal({
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
 
+  // KM Statistics state
+  const [kmStats, setKmStats] = useState({
+    daily_km: 0,
+    weekly_km: 0,
+    monthly_km: 0
+  });
+
   // Date range state for KM chart
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -99,6 +107,39 @@ export function RiderModal({
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0]; // Default to today
   });
+
+  // Fetch KM statistics when modal opens
+  useEffect(() => {
+    const fetchKMStats = async () => {
+      if (!rider?.id || !hospitalId) return;
+
+      try {
+        // Calculate date ranges
+        const today = new Date().toISOString().split('T')[0];
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // Fetch data for different time ranges
+        const [dailyData, weeklyData, monthlyData] = await Promise.all([
+          apiClient.getRiderKMRange(hospitalId, today, today, rider.id),
+          apiClient.getRiderKMRange(hospitalId, weekAgo, today, rider.id),
+          apiClient.getRiderKMRange(hospitalId, monthAgo, today, rider.id)
+        ]);
+
+        setKmStats({
+          daily_km: dailyData?.data?.daily_data?.[0]?.daily_km || 0,
+          weekly_km: weeklyData?.data?.daily_data?.reduce((sum: number, day: any) => sum + (day.daily_km || 0), 0) || 0,
+          monthly_km: monthlyData?.data?.daily_data?.reduce((sum: number, day: any) => sum + (day.daily_km || 0), 0) || 0
+        });
+      } catch (error) {
+        console.error('Error fetching KM stats:', error);
+      }
+    };
+
+    if (isOpen && rider) {
+      fetchKMStats();
+    }
+  }, [isOpen, rider?.id, hospitalId]);
 
   if (!isOpen || !rider) return null;
 
@@ -445,17 +486,17 @@ export function RiderModal({
                 <h3 className="text-xl font-bold text-gray-800 mb-6 text-center">KM Performance Statistics</h3>
                 <div className="grid grid-cols-4 gap-8">
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-teal-600 mb-2">0</p>
+                    <p className="text-3xl font-bold text-teal-600 mb-2">{kmStats.daily_km.toFixed(1)}</p>
                     <p className="text-sm text-gray-600 font-medium">Daily KM</p>
                     <p className="text-xs text-gray-500">Today's distance</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-green-600 mb-2">0</p>
+                    <p className="text-3xl font-bold text-green-600 mb-2">{kmStats.weekly_km.toFixed(1)}</p>
                     <p className="text-sm text-gray-600 font-medium">Weekly KM</p>
                     <p className="text-xs text-gray-500">Last 7 days</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-purple-600 mb-2">0</p>
+                    <p className="text-3xl font-bold text-purple-600 mb-2">{kmStats.monthly_km.toFixed(1)}</p>
                     <p className="text-sm text-gray-600 font-medium">Monthly KM</p>
                     <p className="text-xs text-gray-500">Last 30 days</p>
                   </div>
