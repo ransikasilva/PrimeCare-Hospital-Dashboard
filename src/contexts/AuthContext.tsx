@@ -137,13 +137,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-      
+
       const response = await apiClient.login(email, password);
-      
+
       if (response.success && response.data) {
         const { access_token, user } = response.data;
         apiClient.setToken(access_token);
-        
+
         setAuthState({
           user: user,
           isLoading: false,
@@ -152,7 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return response;
       } else {
-        throw new Error(response.error?.message || 'Login failed');
+        // Include the full response for error handling (especially EMAIL_NOT_VERIFIED)
+        const error: any = new Error(response.error?.message || 'Login failed');
+        error.code = response.error?.code;
+        error.data = response.data; // Include email if present
+        throw error;
       }
     } catch (error) {
       console.error('AuthContext: Login error:', error);

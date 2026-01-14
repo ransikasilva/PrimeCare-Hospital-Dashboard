@@ -214,6 +214,15 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error('Login failed:', error);
 
+      // Check if email is not verified
+      if (error?.code === 'EMAIL_NOT_VERIFIED' && error?.data?.email) {
+        // Store email in session storage for the verify-email page
+        sessionStorage.setItem('pending_verification_email', error.data.email);
+        // Redirect to verify-email page
+        router.push('/verify-email');
+        return;
+      }
+
       // Check if service is suspended
       if (error?.response?.data?.error?.code === 'SERVICE_SUSPENDED') {
         const suspensionData = error.response.data.error.data;

@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/api';
 import {
   Phone, Monitor, Bell, AlertTriangle, Users, Building2,
   Clock, Wifi, Database, Save, RotateCcw,
-  MessageSquare, Radio, Route
+  MessageSquare, Radio, Route, Power
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -17,10 +17,7 @@ export default function SettingsPage() {
     shortName: '',
     hospitalCode: '',
     contactPhone: '',
-    address: '',
-    workingHours: '6:00 AM - 10:00 PM',
-    emergencyOps: true,
-    poyaDayOps: 'normal'
+    address: ''
   });
 
   // SMS sending state
@@ -38,6 +35,20 @@ export default function SettingsPage() {
   const [distanceMode, setDistanceMode] = useState<'full' | 'pickup_only' | null>(null);
   const [loadingDistance, setLoadingDistance] = useState(true);
   const [savingDistance, setSavingDistance] = useState(false);
+
+  // Activity status settings
+  const [activityStatus, setActivityStatus] = useState({
+    is_active: true,
+    scheduled_active_at: '',
+    inactive_reason: '',
+    inactive_since: null as string | null,
+    last_status_change: null as string | null
+  });
+  const [loadingActivityStatus, setLoadingActivityStatus] = useState(true);
+  const [savingActivityStatus, setSavingActivityStatus] = useState(false);
+  const [showInactiveDialog, setShowInactiveDialog] = useState(false);
+  const [reactivationDate, setReactivationDate] = useState('');
+  const [reactivationTime, setReactivationTime] = useState('');
 
   // Get current hospital data and real counts
   const { data: hospitalsData, loading } = useMyHospitals();
@@ -57,10 +68,7 @@ export default function SettingsPage() {
         shortName: currentHospital.name?.split(' ').slice(0, 2).join(' ') || '',
         hospitalCode: currentHospital.hospital_code || '',
         contactPhone: currentHospital.contact_phone || '',
-        address: currentHospital.address || '',
-        workingHours: currentHospital.lab_hours || '6:00 AM - 10:00 PM',
-        emergencyOps: true,
-        poyaDayOps: 'normal'
+        address: currentHospital.address || ''
       });
     }
   }, [currentHospital]);
@@ -155,11 +163,7 @@ export default function SettingsPage() {
       const updateData = {
         name: formData.hospitalName,
         contact_phone: formData.contactPhone,
-        address: formData.address,
-        lab_hours: formData.workingHours,
-        // Add any additional operational settings
-        emergency_operations: formData.emergencyOps,
-        poya_day_operations: formData.poyaDayOps
+        address: formData.address
       };
 
       console.log('Saving hospital settings:', updateData);
@@ -262,6 +266,97 @@ export default function SettingsPage() {
     }
   };
 
+  // Load activity status on mount
+  useEffect(() => {
+    const fetchActivityStatus = async () => {
+      if (!hospitalId) return;
+
+      try {
+        setLoadingActivityStatus(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hospitals/activity-status`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          setActivityStatus({
+            is_active: data.data.is_active ?? true,
+            scheduled_active_at: data.data.scheduled_active_at || '',
+            inactive_reason: data.data.inactive_reason || '',
+            inactive_since: data.data.inactive_since || null,
+            last_status_change: data.data.last_status_change || null
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching activity status:', error);
+      } finally {
+        setLoadingActivityStatus(false);
+      }
+    };
+
+    fetchActivityStatus();
+  }, [hospitalId]);
+
+  // Handle activity status update
+  const handleUpdateActivityStatus = async (isActive: boolean, scheduledActiveAt: string | null, reason: string) => {
+    if (!hospitalId) {
+      alert('Hospital ID not found. Please refresh the page.');
+      return;
+    }
+
+    setSavingActivityStatus(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hospitals/activity-status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          is_active: isActive,
+          scheduled_active_at: scheduledActiveAt,
+          reason: reason
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(data.message || `Hospital marked as ${isActive ? 'active' : 'inactive'} successfully!`);
+
+        // Update local state
+        setActivityStatus({
+          is_active: data.data.is_active,
+          scheduled_active_at: data.data.scheduled_active_at || '',
+          inactive_reason: data.data.inactive_reason || '',
+          inactive_since: data.data.inactive_since || null,
+          last_status_change: data.data.last_status_change || null
+        });
+
+        // Reset dialog fields
+        setReactivationDate('');
+        setReactivationTime('');
+
+        // Trigger header refresh by dispatching a custom event
+        window.dispatchEvent(new CustomEvent('activityStatusChanged', {
+          detail: {
+            is_active: data.data.is_active,
+            scheduled_active_at: data.data.scheduled_active_at
+          }
+        }));
+      } else {
+        throw new Error(data.error?.message || 'Failed to update activity status');
+      }
+    } catch (error: any) {
+      console.error('Error updating activity status:', error);
+      alert(error.message || 'Failed to update activity status');
+    } finally {
+      setSavingActivityStatus(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -287,6 +382,7 @@ export default function SettingsPage() {
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'general', name: 'General Settings', icon: Building2 },
+            { id: 'activity', name: 'Activity Status', icon: Power },
             { id: 'distance', name: 'Distance Calculation', icon: Route },
             { id: 'send', name: 'Send SMS Notifications', icon: MessageSquare }
           ].map((tab) => {
@@ -368,50 +464,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Operational Settings */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Operational Settings</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Working Hours</label>
-                  <input
-                    type="text"
-                    value={formData.workingHours}
-                    onChange={(e) => handleInputChange('workingHours', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Poya Day Operations</label>
-                  <select
-                    value={formData.poyaDayOps}
-                    onChange={(e) => handleInputChange('poyaDayOps', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 bg-white"
-                  >
-                    <option value="normal">Normal Operations</option>
-                    <option value="limited">Limited Operations</option>
-                    <option value="emergency">Emergency Only</option>
-                    <option value="closed">Closed</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="emergencyOps"
-                  checked={formData.emergencyOps}
-                  onChange={(e) => handleInputChange('emergencyOps', e.target.checked)}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
-                />
-                <label htmlFor="emergencyOps" className="ml-2 block text-sm text-gray-900">
-                  24/7 Emergency Operations Available
-                </label>
-              </div>
-            </div>
-          </div>
 
           {/* Action Buttons */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -462,6 +514,196 @@ export default function SettingsPage() {
             </div>
             <p className="text-xs text-gray-500 mt-4">Last system check: 30 seconds ago</p>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'activity' && (
+        <div className="space-y-6">
+          {/* Activity Status Card */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Hospital Activity Status</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Control whether your hospital is accepting new sample collection orders
+              </p>
+            </div>
+            <div className="p-6">
+              {/* Current Status Display */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full ${activityStatus.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700">Current Status</p>
+                      <p className={`text-lg font-semibold ${activityStatus.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                        {activityStatus.is_active ? '🟢 Active - Accepting Orders' : '🔴 Inactive - Not Accepting Orders'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (activityStatus.is_active) {
+                        // Going inactive - show dialog
+                        setShowInactiveDialog(true);
+                      } else {
+                        // Going active - activate immediately
+                        handleUpdateActivityStatus(true, null, '');
+                      }
+                    }}
+                    disabled={savingActivityStatus}
+                    className={`px-6 py-3 rounded-md font-medium text-white transition-colors ${
+                      activityStatus.is_active
+                        ? 'bg-red-600 hover:bg-red-700'
+                        : 'bg-green-600 hover:bg-green-700'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {savingActivityStatus ? 'Updating...' : activityStatus.is_active ? 'Mark as Inactive' : 'Reactivate Hospital'}
+                  </button>
+                </div>
+
+                {!activityStatus.is_active && activityStatus.scheduled_active_at && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600">
+                      <strong>Scheduled to reactivate:</strong>{' '}
+                      {new Date(activityStatus.scheduled_active_at).toLocaleString('en-LK', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                      })}
+                    </p>
+                    {activityStatus.inactive_reason && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        <strong>Reason:</strong> {activityStatus.inactive_reason}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Information Panel */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-2">Important Information:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>When inactive, collection centers <strong>cannot create new orders</strong> to your hospital</li>
+                      <li>SMS notifications will be sent to all affiliated collection centers and riders</li>
+                      <li>You must specify when you plan to reactivate when going inactive</li>
+                      <li>Existing active orders will continue to be processed normally</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Inactive Dialog Modal */}
+          {showInactiveDialog && (
+            <div
+              className="fixed inset-0 flex items-center justify-center z-50"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                backdropFilter: 'blur(8px)'
+              }}
+            >
+              <div
+                className="rounded-2xl shadow-2xl max-w-md w-full mx-4"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.98)',
+                  backdropFilter: 'blur(20px)'
+                }}
+              >
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">⚠️ Mark Hospital as Inactive</h3>
+                </div>
+                <div className="p-6 space-y-4">
+                  <p className="text-gray-700">
+                    Collection centers will <strong>NOT</strong> be able to create new orders while inactive.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      When will you reactivate? *
+                    </label>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Reactivation Date</label>
+                        <input
+                          type="date"
+                          value={reactivationDate}
+                          onChange={(e) => setReactivationDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 bg-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Reactivation Time</label>
+                        <input
+                          type="time"
+                          value={reactivationTime}
+                          onChange={(e) => setReactivationTime(e.target.value)}
+                          className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-gray-900 bg-white"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Reason (Optional)
+                    </label>
+                    <textarea
+                      value={activityStatus.inactive_reason}
+                      onChange={(e) => setActivityStatus(prev => ({ ...prev, inactive_reason: e.target.value }))}
+                      placeholder="e.g., Annual maintenance, Public holiday, etc."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900 bg-white"
+                    />
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ This will send SMS notifications to all affiliated collection centers and riders.
+                    </p>
+                  </div>
+                </div>
+                <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowInactiveDialog(false);
+                      setReactivationDate('');
+                      setReactivationTime('');
+                      setActivityStatus(prev => ({ ...prev, inactive_reason: '' }));
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!reactivationDate || !reactivationTime) {
+                        alert('Please select both date and time for reactivation');
+                        return;
+                      }
+                      const scheduledDateTime = `${reactivationDate}T${reactivationTime}:00`;
+                      handleUpdateActivityStatus(false, scheduledDateTime, activityStatus.inactive_reason);
+                      setShowInactiveDialog(false);
+                    }}
+                    disabled={!reactivationDate || !reactivationTime}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Confirm - Go Inactive
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

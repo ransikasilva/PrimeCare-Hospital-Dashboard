@@ -744,7 +744,7 @@ class ApiClient {
   }
 
   async getTATReport(hospitalId: string, params: string) {
-    return this.request<any>(`/api/reports/${hospitalId}/tat-performance?${params}`);
+    return this.request<any>(`/api/hospitals/reports/tat?${params}`);
   }
 
   async getSampleReport(hospitalId: string, params: string) {
@@ -765,6 +765,27 @@ class ApiClient {
       method: 'PUT',
       body: JSON.stringify({ mode }),
     });
+  }
+
+  // CC-specific delivery time settings
+  async getCCDeliverySettings() {
+    return this.request<any>('/api/hospitals/cc-delivery-settings');
+  }
+
+  async updateCCDeliverySettings(centerId: string, settings: {
+    pickup_delay_minutes?: number | null;
+    delivery_delay_minutes?: number | null;
+    urgent_delivery_delay_minutes?: number | null;
+  }) {
+    return this.request<any>(`/api/hospitals/cc-delivery-settings/${centerId}`, {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    });
+  }
+
+  // Subscription and approval status checking
+  async getSubscriptionStatus() {
+    return this.request<any>('/api/hospitals/subscription-status');
   }
 }
 

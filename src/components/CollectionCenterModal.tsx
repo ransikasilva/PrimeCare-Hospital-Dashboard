@@ -72,7 +72,7 @@ export function CollectionCenterModal({
   const [showRejectForm, setShowRejectForm] = useState(false);
 
   // Tab state
-  const [activeTab, setActiveTab] = useState<'details' | 'orders' | 'riders'>('details');
+  const [activeTab, setActiveTab] = useState<'details' | 'orders' | 'riders' | 'delivery-times'>('details');
 
   // Orders state
   const [orders, setOrders] = useState<any[]>([]);
@@ -94,6 +94,15 @@ export function CollectionCenterModal({
   const [loadingRiders, setLoadingRiders] = useState(false);
   const [showAddRiderModal, setShowAddRiderModal] = useState(false);
   const [selectedRidersToAdd, setSelectedRidersToAdd] = useState<string[]>([]);
+
+  // Delivery times state
+  const [deliverySettings, setDeliverySettings] = useState<any>(null);
+  const [hospitalDefaults, setHospitalDefaults] = useState<any>(null);
+  const [loadingDeliverySettings, setLoadingDeliverySettings] = useState(false);
+  const [savingDeliverySettings, setSavingDeliverySettings] = useState(false);
+  const [pickupDelayMinutes, setPickupDelayMinutes] = useState<string>('');
+  const [deliveryDelayMinutes, setDeliveryDelayMinutes] = useState<string>('');
+  const [urgentDeliveryDelayMinutes, setUrgentDeliveryDelayMinutes] = useState<string>('');
 
   // Fetch orders for the collection center
   const fetchOrders = async () => {
@@ -237,6 +246,67 @@ export function CollectionCenterModal({
   useEffect(() => {
     if (activeTab === 'riders') {
       fetchRiders();
+    }
+  }, [activeTab, center?.id]);
+
+  // Fetch delivery settings for the collection center
+  const fetchDeliverySettings = async () => {
+    if (!center) return;
+
+    setLoadingDeliverySettings(true);
+    try {
+      const response = await apiClient.getCCDeliverySettings();
+      if (response.success && response.data) {
+        // Find settings for this specific center
+        const centerSettings = response.data.collection_centers?.find(
+          (c: any) => c.center_id === center.id
+        );
+
+        setHospitalDefaults(response.data.hospital_defaults);
+
+        // Pre-fill form with existing values or empty
+        setPickupDelayMinutes(centerSettings?.pickup_delay_minutes?.toString() || '');
+        setDeliveryDelayMinutes(centerSettings?.delivery_delay_minutes?.toString() || '');
+        setUrgentDeliveryDelayMinutes(centerSettings?.urgent_delivery_delay_minutes?.toString() || '');
+        setDeliverySettings(centerSettings);
+      }
+    } catch (error) {
+      console.error('Error fetching delivery settings:', error);
+    } finally {
+      setLoadingDeliverySettings(false);
+    }
+  };
+
+  const handleSaveDeliverySettings = async () => {
+    if (!center) return;
+
+    setSavingDeliverySettings(true);
+    try {
+      const settings = {
+        pickup_delay_minutes: pickupDelayMinutes ? parseInt(pickupDelayMinutes) : null,
+        delivery_delay_minutes: deliveryDelayMinutes ? parseInt(deliveryDelayMinutes) : null,
+        urgent_delivery_delay_minutes: urgentDeliveryDelayMinutes ? parseInt(urgentDeliveryDelayMinutes) : null,
+      };
+
+      const response = await apiClient.updateCCDeliverySettings(center.id, settings);
+
+      if (response.success) {
+        alert('✅ Delivery time settings updated successfully!');
+        await fetchDeliverySettings();
+      } else {
+        alert(`❌ Failed to update settings: ${response.error?.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error saving delivery settings:', error);
+      alert('❌ Error saving delivery settings');
+    } finally {
+      setSavingDeliverySettings(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'delivery-times') {
+      fetchDeliverySettings();
     }
   }, [activeTab, center?.id]);
 
@@ -460,6 +530,20 @@ export function CollectionCenterModal({
                           {assignedRiders.length}
                         </span>
                       )}
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('delivery-times')}
+                    className={`px-6 py-4 font-semibold transition-all duration-200 border-b-2 ${
+                      activeTab === 'delivery-times'
+                        ? 'border-teal-500 text-teal-600 bg-white'
+                        : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-5 h-5" />
+                      <span>Delivery Times</span>
                     </div>
                   </button>
                 </>
@@ -953,6 +1037,155 @@ export function CollectionCenterModal({
                             </button>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Delivery Times Tab */}
+            {activeTab === 'delivery-times' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Collection Center Delivery Time Settings</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configure pickup and delivery time thresholds for this collection center. Leave empty to use hospital defaults.
+                  </p>
+                </div>
+
+                {loadingDeliverySettings ? (
+                  <div className="p-8 text-center">
+                    <RefreshCw className="w-6 h-6 text-gray-400 animate-spin mx-auto mb-2" />
+                    <p className="text-gray-500">Loading delivery settings...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Hospital Defaults Info Box */}
+                    {hospitalDefaults && (
+                      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-teal-800 mb-2">Hospital Default Settings</h4>
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Pickup Response:</p>
+                            <p className="font-medium text-gray-800">
+                              {hospitalDefaults.pickup_response_minutes || 15} minutes
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Standard Delivery:</p>
+                            <p className="font-medium text-gray-800">
+                              {hospitalDefaults.standard_delivery_minutes || 45} minutes
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Urgent Delivery:</p>
+                            <p className="font-medium text-gray-800">
+                              {hospitalDefaults.urgent_delivery_minutes || 30} minutes
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-2">
+                          These defaults apply when no CC-specific settings are configured.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* CC-Specific Settings Form */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-5">
+                      <h4 className="font-semibold text-gray-800 mb-4">
+                        Override Settings for {center.center_name}
+                      </h4>
+
+                      {/* Pickup Delay */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Pickup Response Time (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={pickupDelayMinutes}
+                          onChange={(e) => setPickupDelayMinutes(e.target.value)}
+                          placeholder={`Empty = ${hospitalDefaults?.pickup_response_minutes || 15} min (hospital default)`}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Time threshold for rider to reach collection center after order creation
+                        </p>
+                      </div>
+
+                      {/* Standard Delivery Delay */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Standard Delivery Time (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={deliveryDelayMinutes}
+                          onChange={(e) => setDeliveryDelayMinutes(e.target.value)}
+                          placeholder={`Empty = ${hospitalDefaults?.standard_delivery_minutes || 45} min (hospital default)`}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Time threshold for standard deliveries from CC to hospital
+                        </p>
+                      </div>
+
+                      {/* Urgent Delivery Delay */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Urgent Delivery Time (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={urgentDeliveryDelayMinutes}
+                          onChange={(e) => setUrgentDeliveryDelayMinutes(e.target.value)}
+                          placeholder={`Empty = ${hospitalDefaults?.urgent_delivery_minutes || 30} min (hospital default)`}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Time threshold for urgent/emergency deliveries from CC to hospital
+                        </p>
+                      </div>
+
+                      {/* Save Button */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <button
+                          onClick={handleSaveDeliverySettings}
+                          disabled={savingDeliverySettings}
+                          className="w-full px-6 py-3 bg-teal-500 text-white font-semibold rounded-lg hover:bg-teal-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                        >
+                          {savingDeliverySettings ? (
+                            <>
+                              <RefreshCw className="w-5 h-5 animate-spin" />
+                              <span>Saving...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-5 h-5" />
+                              <span>Save Delivery Time Settings</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div className="text-sm text-blue-800">
+                          <p className="font-semibold mb-1">How it works:</p>
+                          <ul className="list-disc list-inside space-y-1 text-blue-700">
+                            <li>When delivery times exceed these thresholds, orders are marked as "LATE"</li>
+                            <li>SMS notifications are automatically sent to assigned riders</li>
+                            <li>Late orders appear with visual indicators in the hospital dashboard</li>
+                            <li>Empty fields will use hospital-wide default settings</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   </div>

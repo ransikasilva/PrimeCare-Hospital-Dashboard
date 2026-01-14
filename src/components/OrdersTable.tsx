@@ -97,50 +97,17 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
     return "text-green-700 bg-green-50 px-2 py-1 rounded-md border border-green-200 font-medium";
   };
 
-  // Check if order is exceeding SLA thresholds
+  // Check if order is late based on backend tracking (CC-specific thresholds)
   const getSLARowColor = (order: any) => {
-    const now = new Date();
-    const createdAt = new Date(order.created_at);
-    const assignedAt = order.assigned_at ? new Date(order.assigned_at) : null;
-    const pickedUpAt = order.picked_up_at ? new Date(order.picked_up_at) : null;
-
-    // Default SLA thresholds (in minutes) - these should ideally come from API
-    const PICKUP_RESPONSE_THRESHOLD = 15; // assigned → picked up
-    const STANDARD_DELIVERY_THRESHOLD = 90; // picked up → delivered (routine)
-    const URGENT_DELIVERY_THRESHOLD = 45; // created → delivered (urgent)
-    const ALERT_THRESHOLD = 10; // warning before deadline
-
-    const minutesSinceCreated = (now.getTime() - createdAt.getTime()) / (1000 * 60);
-    const minutesSinceAssigned = assignedAt ? (now.getTime() - assignedAt.getTime()) / (1000 * 60) : 0;
-    const minutesSincePickedUp = pickedUpAt ? (now.getTime() - pickedUpAt.getTime()) / (1000 * 60) : 0;
-
     // Skip if already delivered or cancelled
     if (order.status === 'delivered' || order.status === 'cancelled') {
       return "hover:bg-gray-50";
     }
 
-    // Check urgent delivery total time (created → delivered)
-    if (order.urgency === 'urgent' && minutesSinceCreated > URGENT_DELIVERY_THRESHOLD) {
-      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - exceeded
-    }
-    if (order.urgency === 'urgent' && minutesSinceCreated > (URGENT_DELIVERY_THRESHOLD - ALERT_THRESHOLD)) {
-      return "bg-orange-50 hover:bg-orange-100 border-2 border-orange-500"; // Warning - approaching deadline
-    }
-
-    // Check pickup response time (assigned → picked up)
-    if (order.status === 'assigned' && minutesSinceAssigned > PICKUP_RESPONSE_THRESHOLD) {
-      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - rider hasn't picked up
-    }
-    if (order.status === 'assigned' && minutesSinceAssigned > (PICKUP_RESPONSE_THRESHOLD - ALERT_THRESHOLD)) {
-      return "bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-500"; // Warning
-    }
-
-    // Check standard delivery time (picked up → delivered for routine)
-    if (order.urgency === 'routine' && pickedUpAt && minutesSincePickedUp > STANDARD_DELIVERY_THRESHOLD) {
-      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - exceeded
-    }
-    if (order.urgency === 'routine' && pickedUpAt && minutesSincePickedUp > (STANDARD_DELIVERY_THRESHOLD - ALERT_THRESHOLD)) {
-      return "bg-orange-50 hover:bg-orange-100 border-2 border-orange-500"; // Warning
+    // Use backend late tracking flags
+    // Backend marks pickup_late or delivery_late based on CC-specific thresholds
+    if (order.pickup_late || order.delivery_late) {
+      return "bg-red-50 hover:bg-red-100 border-2 border-red-500"; // Critical - LATE
     }
 
     // Default - no SLA issues
@@ -193,6 +160,9 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                SLA Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -200,7 +170,7 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
           <tbody className="bg-white divide-y divide-gray-200">
             {orders.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                   No orders found
                 </td>
               </tr>
@@ -250,6 +220,29 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
                       {order.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {order.pickup_late || order.delivery_late ? (
+                      <div className="flex items-center space-x-1">
+                        <span className="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
+                          🚨 LATE
+                        </span>
+                        {order.pickup_late && order.pickup_late_by_minutes && (
+                          <span className="text-xs text-red-700 font-medium">
+                            Pickup: +{order.pickup_late_by_minutes}m
+                          </span>
+                        )}
+                        {order.delivery_late && order.delivery_late_by_minutes && (
+                          <span className="text-xs text-red-700 font-medium">
+                            Delivery: +{order.delivery_late_by_minutes}m
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700 border border-green-200">
+                        ✓ On Time
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex space-x-2">

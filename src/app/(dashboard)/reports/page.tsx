@@ -661,83 +661,174 @@ function FinancialReport({ data }: { data: any }) {
 
 // TAT Performance Report Component
 function TATPerformanceReport({ data }: { data: any }) {
-  const overview = data.overview || {};
+  const summary = data?.summary || {};
+  const breakdown = data?.breakdown || {};
+  const extremes = data?.extremes || {};
+
+  // Determine status based on performance
+  const isOnTime = parseFloat(summary.on_time_rate || 0) >= 90;
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Avg Pickup Response</h3>
-          <p className="text-3xl font-bold text-gray-900">{overview.avg_pickup_response_mins || 0} min</p>
-          <p className="text-sm text-gray-500 mt-1">Assigned → Picked Up</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Avg Delivery Time</h3>
-          <p className="text-3xl font-bold text-gray-900">{overview.avg_delivery_time_mins || 0} min</p>
-          <p className="text-sm text-gray-500 mt-1">Picked Up → Delivered</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">Avg Total TAT</h3>
-          <p className="text-3xl font-bold text-gray-900">{overview.avg_total_tat_mins || 0} min</p>
-          <p className="text-sm text-gray-500 mt-1">Created → Delivered</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-sm font-medium text-gray-600 mb-2">SLA Compliance</h3>
-          <p className="text-3xl font-bold text-green-600">{overview.sla_compliance_percentage || 0}%</p>
-          <p className="text-sm text-gray-500 mt-1">{overview.sla_compliant_orders || 0} / {overview.delivered_orders || 0} orders</p>
+      {/* Overall TAT Performance Box */}
+      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-200 pb-2">
+          Overall TAT Performance
+        </h3>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Average TAT:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-gray-900">{summary.average_tat || 0} minutes</span>
+              {summary.average_tat <= summary.target_tat && (
+                <span className="text-green-600 font-bold text-xl">✓</span>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Target TAT:</span>
+            <span className="text-2xl font-bold text-gray-900">{summary.target_tat || 45} minutes</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">On-Time Rate:</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-2xl font-bold ${isOnTime ? 'text-green-600' : 'text-orange-600'}`}>
+                {summary.on_time_rate || 0}%
+              </span>
+              {isOnTime && <span className="text-green-600 font-bold text-xl">✓</span>}
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Total Deliveries:</span>
+            <span className="text-2xl font-bold text-gray-900">{summary.total_deliveries || 0}</span>
+          </div>
         </div>
       </div>
 
-      {/* SLA Violation Metrics - Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-red-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Missed Pickups</h3>
-            <AlertCircle className="w-5 h-5 text-red-500" />
+      {/* TAT Breakdown Box */}
+      <div className="bg-white rounded-xl shadow-lg border-2 border-gray-300 p-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-4 border-b-2 border-gray-200 pb-2">
+          TAT Breakdown
+        </h3>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Urgent Samples:</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-2xl font-bold ${breakdown.urgent?.average_tat <= breakdown.urgent?.target ? 'text-green-600' : 'text-orange-600'}`}>
+                {breakdown.urgent?.average_tat || 0} min
+              </span>
+              {breakdown.urgent?.average_tat <= breakdown.urgent?.target && (
+                <span className="text-green-600 font-bold text-xl">✓</span>
+              )}
+            </div>
           </div>
-          <p className="text-3xl font-bold text-red-600">{overview.missed_pickups || 0}</p>
-          <p className="text-sm text-gray-500 mt-1">Rider didn't pick up within 15 min</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-orange-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Delayed Deliveries</h3>
-            <Clock className="w-5 h-5 text-orange-500" />
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Standard Samples:</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-2xl font-bold ${breakdown.standard?.average_tat <= breakdown.standard?.target ? 'text-green-600' : 'text-orange-600'}`}>
+                {breakdown.standard?.average_tat || 0} min
+              </span>
+              {breakdown.standard?.average_tat <= breakdown.standard?.target && (
+                <span className="text-green-600 font-bold text-xl">✓</span>
+              )}
+            </div>
           </div>
-          <p className="text-3xl font-bold text-orange-600">{overview.delayed_deliveries || 0}</p>
-          <p className="text-sm text-gray-500 mt-1">Exceeded delivery threshold</p>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm border border-yellow-200 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-gray-600">Assigned Not Picked Up</h3>
-            <Users className="w-5 h-5 text-yellow-500" />
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700 font-medium">Delayed ({'>'}60 min):</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-2xl font-bold ${parseFloat(breakdown.delayed?.percentage || 0) > 5 ? 'text-red-600' : 'text-gray-900'}`}>
+                {breakdown.delayed?.count || 0} ({breakdown.delayed?.percentage || 0}%)
+              </span>
+              {parseFloat(breakdown.delayed?.percentage || 0) > 5 && (
+                <span className="text-red-600 font-bold text-xl">!</span>
+              )}
+            </div>
           </div>
-          <p className="text-3xl font-bold text-yellow-600">{overview.assigned_not_picked || 0}</p>
-          <p className="text-sm text-gray-500 mt-1">Currently assigned but not picked</p>
         </div>
       </div>
 
-      {/* Handovers */}
-      {data.handovers && data.handovers.length > 0 && (
+      {/* Performance Extremes */}
+      {(extremes.fastest || extremes.slowest) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {extremes.fastest && (
+            <div className="bg-green-50 rounded-xl shadow-sm border-2 border-green-200 p-6">
+              <h4 className="text-lg font-bold text-green-900 mb-3 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                Fastest Delivery
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-green-800">
+                  <span className="font-semibold">Order:</span> {extremes.fastest.order_number}
+                </p>
+                <p className="text-sm text-green-800">
+                  <span className="font-semibold">Center:</span> {extremes.fastest.center_name}
+                </p>
+                <p className="text-3xl font-bold text-green-700">{extremes.fastest.tat_minutes} minutes</p>
+              </div>
+            </div>
+          )}
+
+          {extremes.slowest && (
+            <div className="bg-orange-50 rounded-xl shadow-sm border-2 border-orange-200 p-6">
+              <h4 className="text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" />
+                Slowest Delivery
+              </h4>
+              <div className="space-y-2">
+                <p className="text-sm text-orange-800">
+                  <span className="font-semibold">Order:</span> {extremes.slowest.order_number}
+                </p>
+                <p className="text-sm text-orange-800">
+                  <span className="font-semibold">Center:</span> {extremes.slowest.center_name}
+                </p>
+                <p className="text-3xl font-bold text-orange-700">{extremes.slowest.tat_minutes} minutes</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Detailed Orders Table */}
+      {data.orders && data.orders.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Handover Analysis</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed TAT Report</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-teal-50 to-teal-100">
                 <tr>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Reason</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Count</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Completed</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Avg Time</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-teal-800 uppercase tracking-wider">Order</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-teal-800 uppercase tracking-wider">Sample Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-teal-800 uppercase tracking-wider">Center</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-teal-800 uppercase tracking-wider">Rider</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Urgency</th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">TAT (min)</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.handovers.map((row: any, index: number) => (
+                {data.orders.map((order: any, index: number) => (
                   <tr key={index} className="hover:bg-teal-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center font-medium text-gray-900">{row.handover_reason}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.handover_count}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.completed_handovers}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_handover_time_mins || 0} min</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.order_number}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{order.sample_type || 'N/A'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{order.center_name}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{order.rider_name || 'N/A'}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        order.urgency === 'urgent'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {order.urgency}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`font-bold ${
+                        order.tat_minutes <= (order.urgency === 'urgent' ? 30 : 60)
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }`}>
+                        {order.tat_minutes}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
