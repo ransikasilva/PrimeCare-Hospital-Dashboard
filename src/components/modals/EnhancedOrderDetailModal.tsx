@@ -55,6 +55,27 @@ interface OrderDetails {
     accuracy_meters?: number;
     recorded_at: string;
   }>;
+  multi_parcel?: {
+    is_multi_parcel: boolean;
+    route_id: string;
+    total_parcels?: number;
+    completed_parcels?: number;
+    route_status?: string;
+    route_created_at?: string;
+    first_pickup_at?: string;
+    other_orders?: Array<{
+      id: string;
+      order_number: string;
+      status: string;
+      sample_type?: string;
+      urgency?: string;
+      center_name?: string;
+      created_at: string;
+      assigned_at?: string;
+      picked_up_at?: string;
+      delivered_at?: string;
+    }>;
+  };
 }
 
 export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps) {
@@ -86,11 +107,13 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
       const locationTracking = orderResponse.data?.location_tracking || [];
       const qrScansData = orderResponse.data?.qr_scans || [];
       const handoverData = orderResponse.data?.handover;
+      const multiParcelData = orderResponse.data?.multi_parcel;
 
       console.log('Location tracking data:', locationTracking);
       console.log('Location tracking length:', locationTracking.length);
       console.log('Handover data:', handoverData);
       console.log('Handover exists?', !!handoverData);
+      console.log('Multi-parcel data:', multiParcelData);
 
       if (!order) {
         setError('Order not found');
@@ -104,7 +127,8 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
         order,
         qr_scans: qrScansData,
         location_tracking: locationTracking,
-        handover: handoverData
+        handover: handoverData,
+        multi_parcel: multiParcelData
       } as any);
 
     } catch (err: any) {
@@ -387,6 +411,52 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       )}
                     </div>
                   </div>
+
+                  {/* Multi-Parcel Route Info */}
+                  {orderDetails.multi_parcel?.is_multi_parcel && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Package className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-blue-900">Multi-Parcel Route</h3>
+                            <span className="text-xs px-2 py-1 bg-blue-200 text-blue-900 rounded-full font-medium">
+                              {orderDetails.multi_parcel.completed_parcels}/{orderDetails.multi_parcel.total_parcels} Delivered
+                            </span>
+                          </div>
+                          <p className="text-sm text-blue-800 mb-3">
+                            This order is part of a multi-parcel route.
+                            Route Status: <span className="font-semibold">{orderDetails.multi_parcel.route_status?.replace(/_/g, ' ').toUpperCase()}</span>
+                          </p>
+
+                          {orderDetails.multi_parcel.other_orders && orderDetails.multi_parcel.other_orders.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-semibold text-blue-900 mb-2">Other Orders in This Route:</p>
+                              {orderDetails.multi_parcel.other_orders.map((otherOrder: any) => (
+                                <div key={otherOrder.id} className="bg-white border border-blue-200 rounded p-2 text-xs">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-mono text-blue-900 font-medium">{otherOrder.order_number}</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(otherOrder.status)}`}>
+                                      {otherOrder.status?.replace(/_/g, ' ').toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-600">
+                                    <p>{otherOrder.center_name}</p>
+                                    {otherOrder.sample_type && <p>Sample: {otherOrder.sample_type}</p>}
+                                    {otherOrder.urgency && (
+                                      <span className={`inline-block mt-1 px-2 py-0.5 rounded ${otherOrder.urgency === 'urgent' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'}`}>
+                                        {otherOrder.urgency}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Route Info */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -671,7 +741,10 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                       </div>
                       <div className="bg-purple-50 p-4 rounded-lg max-w-sm">
                         <label className="text-sm text-purple-900">
-                          Route Actual KM (Total)
+                          {orderDetails.multi_parcel?.is_multi_parcel
+                            ? 'Route Actual KM (for all orders)'
+                            : 'Route Actual KM (Total)'
+                          }
                         </label>
                         <p className="text-2xl font-bold text-purple-900 mt-1">
                           {orderDetails.order?.route_actual_km && orderDetails.order.route_actual_km > 0
@@ -680,35 +753,27 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                               ? 'Not recorded'
                               : 'In Progress'}
                         </p>
-                        <p className="text-xs text-purple-700 mt-1">Rider A + Rider B combined distance</p>
+                        <p className="text-xs text-purple-700 mt-1">
+                          {orderDetails.multi_parcel?.is_multi_parcel
+                            ? `Combined distance for ${orderDetails.multi_parcel.total_parcels} orders (Rider A + Rider B)`
+                            : 'Rider A + Rider B combined distance'
+                          }
+                        </p>
                       </div>
                     </div>
                   ) : (
-                    // Normal delivery - show distance info based on order status
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-teal-50 p-4 rounded-lg">
-                        <label className="text-sm text-teal-900">Estimated Distance</label>
-                        <p className="text-2xl font-bold text-teal-900 mt-1">
-                          {orderDetails.order?.estimated_distance_km
-                            ? `${orderDetails.order.estimated_distance_km.toFixed(1)} km`
-                            : 'N/A'}
-                        </p>
+                    // Normal delivery - show only Route Actual KM
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                        <Route className="w-4 h-4" />
+                        <span className="font-medium">Distance Information</span>
                       </div>
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <label className="text-sm text-green-900">
-                          {orderDetails.order?.status === 'delivered' ? 'Actual Distance' : 'Tracking Distance'}
-                        </label>
-                        <p className="text-2xl font-bold text-green-900 mt-1">
-                          {orderDetails.order?.actual_distance_km && orderDetails.order.actual_distance_km > 0
-                            ? `${orderDetails.order.actual_distance_km.toFixed(1)} km`
-                            : orderDetails.order?.status === 'delivered'
-                              ? 'Not recorded'
-                              : 'In Progress'}
-                        </p>
-                      </div>
-                      <div className="bg-purple-50 p-4 rounded-lg">
+                      <div className="bg-purple-50 p-4 rounded-lg max-w-sm">
                         <label className="text-sm text-purple-900">
-                          Route Actual KM <span className="text-xs">(Demo)</span>
+                          {orderDetails.multi_parcel?.is_multi_parcel
+                            ? 'Route Actual KM (for all orders)'
+                            : 'Route Actual KM'
+                          }
                         </label>
                         <p className="text-2xl font-bold text-purple-900 mt-1">
                           {orderDetails.order?.route_actual_km && orderDetails.order.route_actual_km > 0
@@ -717,6 +782,11 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                               ? 'Not recorded'
                               : 'In Progress'}
                         </p>
+                        {orderDetails.multi_parcel?.is_multi_parcel && (
+                          <p className="text-xs text-purple-700 mt-1">
+                            Combined distance for {orderDetails.multi_parcel.total_parcels} orders
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
