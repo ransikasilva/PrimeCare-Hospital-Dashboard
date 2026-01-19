@@ -114,25 +114,28 @@ export function RiderModal({
       if (!rider?.id || !hospitalId) return;
 
       try {
-        // Calculate date ranges
+        // Fetch rider's total_km from the API
+        // Note: We fetch any date range just to get the rider_total_km value
         const today = new Date().toISOString().split('T')[0];
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-        // Fetch data for different time ranges
-        const [dailyData, weeklyData, monthlyData] = await Promise.all([
-          apiClient.getRiderKMRange(hospitalId, today, today, rider.id),
-          apiClient.getRiderKMRange(hospitalId, weekAgo, today, rider.id),
-          apiClient.getRiderKMRange(hospitalId, monthAgo, today, rider.id)
-        ]);
+        const response = await apiClient.getRiderKMRange(hospitalId, today, today, rider.id);
+
+        // Use rider's total_km from riders table (accumulated KM including handovers)
+        const totalKm = response?.data?.rider_total_km || 0;
 
         setKmStats({
-          daily_km: dailyData?.data?.daily_data?.[0]?.daily_km || 0,
-          weekly_km: weeklyData?.data?.daily_data?.reduce((sum: number, day: any) => sum + (day.daily_km || 0), 0) || 0,
-          monthly_km: monthlyData?.data?.daily_data?.reduce((sum: number, day: any) => sum + (day.daily_km || 0), 0) || 0
+          daily_km: totalKm,
+          weekly_km: totalKm,
+          monthly_km: totalKm
         });
       } catch (error) {
         console.error('Error fetching KM stats:', error);
+        // Ensure zeros on error
+        setKmStats({
+          daily_km: 0,
+          weekly_km: 0,
+          monthly_km: 0
+        });
       }
     };
 

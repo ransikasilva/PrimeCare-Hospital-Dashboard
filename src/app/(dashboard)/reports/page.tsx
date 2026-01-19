@@ -184,7 +184,7 @@ export default function ReportsPage() {
   };
 
   const generateRiderCSV = (data: any) => {
-    const headers = ['Rider', 'Phone', 'Vehicle', 'Total Deliveries', 'Successful', 'Total KM', 'Avg KM', 'Total Earnings (Rs)', 'Avg Delivery Time (min)'];
+    const headers = ['Rider', 'Phone', 'Vehicle', 'Total Deliveries', 'Successful', 'Total KM', 'Total Earnings (Rs)', 'Avg Delivery Time (min)'];
     const rows = data?.map((row: any) => [
       row.rider_name,
       row.rider_phone,
@@ -192,7 +192,6 @@ export default function ReportsPage() {
       row.total_deliveries,
       row.successful_deliveries,
       row.total_km || 0,
-      row.avg_km_per_delivery || 0,
       row.total_earnings || 0,
       row.avg_delivery_time_mins || 0
     ]) || [];
@@ -941,7 +940,6 @@ function RiderPerformanceReport({ data, ratePerKm }: { data: any; ratePerKm: num
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Deliveries</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Successful</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Total KM</th>
-                <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Avg KM</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Earnings</th>
                 <th className="px-6 py-4 text-center text-xs font-semibold text-teal-800 uppercase tracking-wider">Avg Time</th>
               </tr>
@@ -958,7 +956,6 @@ function RiderPerformanceReport({ data, ratePerKm }: { data: any; ratePerKm: num
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.total_deliveries}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-green-600">{row.successful_deliveries}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{totalKm} km</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_km_per_delivery} km</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">Rs. {calculatedEarnings}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">{row.avg_delivery_time_mins} min</td>
                   </tr>

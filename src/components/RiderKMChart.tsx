@@ -14,6 +14,7 @@ interface RiderKMChartProps {
 
 export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDate }: RiderKMChartProps) {
   const [chartData, setChartData] = useState<any[]>([]);
+  const [riderTotalKm, setRiderTotalKm] = useState(0);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchChartData = async () => {
@@ -23,6 +24,9 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
         const response = await apiClient.getRiderKMRange(hospitalId, startDate, endDate, riderId);
 
         if (response.success && response.data.daily_data) {
+          // Store rider's total_km from riders table
+          setRiderTotalKm(response.data.rider_total_km || 0);
+
           const data = response.data.daily_data.map((dayData: any) => {
             const date = new Date(dayData.date);
             return {
@@ -36,10 +40,12 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
           setChartData(data);
         } else {
           console.warn('No KM data received from API');
+          setRiderTotalKm(0);
           setChartData([]);
         }
       } catch (error) {
         console.error('Error fetching chart data:', error);
+        setRiderTotalKm(0);
         setChartData([]);
       } finally {
         setLoading(false);
@@ -62,9 +68,11 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
     );
   }
 
-  const totalKM = chartData.reduce((sum, day) => sum + day.daily_km, 0);
-  const avgKM = totalKM / chartData.length;
-  const maxKM = Math.max(...chartData.map(d => d.daily_km));
+  // Use rider's total_km from riders table (not calculated from daily data)
+  const totalKM = riderTotalKm;
+  const totalDeliveries = chartData.reduce((sum, day) => sum + day.deliveries, 0);
+  const avgKM = totalDeliveries > 0 ? totalKM / totalDeliveries : 0;
+  const maxKM = Math.max(...chartData.map(d => d.daily_km), 0);
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -97,7 +105,7 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
           </div>
         </div>
 
-        {/* Stats Summary */}
+        {/* Stats Summary - Using rider's accumulated total_km */}
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className="text-center">
             <p className="text-2xl font-bold text-teal-600">{totalKM.toFixed(1)}</p>
