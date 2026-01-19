@@ -1094,40 +1094,51 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {orderDetails.qr_scans.map((scan, index) => (
-                        <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="p-2 bg-teal-100 rounded-lg">
-                              <Scan className="w-5 h-5 text-teal-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">Scan #{index + 1}</h4>
-                              <p className="text-xs text-gray-500">{formatTime(scan.scanned_at)}</p>
-                            </div>
-                          </div>
+                      {(() => {
+                        // Deduplicate scans - keep only the first scan for each unique qr_id + scan_type combination
+                        const uniqueScans = orderDetails.qr_scans.reduce((acc: any[], scan: any) => {
+                          const key = `${scan.qr_id}-${scan.scan_type}`;
+                          if (!acc.find((s: any) => `${s.qr_id}-${s.scan_type}` === key)) {
+                            acc.push(scan);
+                          }
+                          return acc;
+                        }, []);
 
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">QR ID:</span>
-                              <span className="font-mono text-gray-900">{scan.qr_id}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Type:</span>
-                              <span className="font-medium text-gray-900 capitalize">{scan.scan_type?.replace(/_/g, ' ')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Scanner:</span>
-                              <span className="font-medium text-gray-900 capitalize">{scan.scanner_type}</span>
-                            </div>
-                            {scan.scan_location && (
-                              <div className="pt-2 border-t border-gray-100">
-                                <span className="text-gray-600">Location:</span>
-                                <p className="text-gray-900 mt-1">{scan.scan_location}</p>
+                        return uniqueScans.map((scan, index) => (
+                          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 bg-teal-100 rounded-lg">
+                                <Scan className="w-5 h-5 text-teal-600" />
                               </div>
-                            )}
+                              <div>
+                                <h4 className="font-semibold text-gray-900">Scan #{index + 1}</h4>
+                                <p className="text-xs text-gray-500">{formatTime(scan.scanned_at)}</p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">QR ID:</span>
+                                <span className="font-mono text-gray-900">{scan.qr_id}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Type:</span>
+                                <span className="font-medium text-gray-900 capitalize">{scan.scan_type?.replace(/_/g, ' ')}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Scanner:</span>
+                                <span className="font-medium text-gray-900 capitalize">{scan.scanner_type}</span>
+                              </div>
+                              {scan.scan_location && (
+                                <div className="pt-2 border-t border-gray-100">
+                                  <span className="text-gray-600">Location:</span>
+                                  <p className="text-gray-900 mt-1">{scan.scan_location}</p>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ));
+                      })()}
                     </div>
                   )}
                 </div>

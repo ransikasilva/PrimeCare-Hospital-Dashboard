@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useOrders } from "@/hooks/useApi";
-import { QrCode, Eye } from "lucide-react";
+import { QrCode, Eye, Search } from "lucide-react";
 import { QRModal } from "./QRModal";
 import { EnhancedOrderDetailModal } from "./modals/EnhancedOrderDetailModal";
 
@@ -10,8 +10,17 @@ interface OrdersTableProps {
 }
 
 export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status" }: OrdersTableProps = {}) {
-  const filters = useMemo(() => ({ status: "active", limit: 10 }), []);
+  const filters = useMemo(() => ({}), []); // Fetch all orders (no status filter)
   const { data: ordersResponse, loading, error } = useOrders(filters);
+  // State declarations
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const ordersPerPage = 10;
+
   // Deduplicate orders that may have multiple QR codes
   const rawOrders = Array.isArray((ordersResponse?.data as any)?.orders) ? (ordersResponse?.data as any).orders : [];
   const deduplicatedOrders = rawOrders.reduce((unique: any[], order: any) => {
@@ -35,14 +44,26 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
       const statusMatch = statusFilter === "All Status" || statusFilter === "" ||
         order.status === statusFilter;
 
-      return priorityMatch && statusMatch;
-    });
-  }, [deduplicatedOrders, priorityFilter, statusFilter]);
+      // Filter by search query (order number or center name)
+      const searchMatch = searchQuery === "" ||
+        order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.center_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.rider_name?.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+      return priorityMatch && statusMatch && searchMatch;
+    });
+  }, [deduplicatedOrders, priorityFilter, statusFilter, searchQuery]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
+  const startIndex = (currentPage - 1) * ordersPerPage;
+  const endIndex = startIndex + ordersPerPage;
+  const currentOrders = orders.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [priorityFilter, statusFilter, searchQuery]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority?.toLowerCase()) {
@@ -132,7 +153,29 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900">Live Orders</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">Live Orders</h3>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Order ID, Center, or Rider..."
+              className="block w-80 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
         {error && (
           <p className="text-sm text-red-600 mt-1">Unable to load orders. Using demo data.</p>
         )}
@@ -168,14 +211,14 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {orders.length === 0 ? (
+            {currentOrders.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                   No orders found
                 </td>
               </tr>
             ) : (
-              orders.map((order: any) => (
+              currentOrders.map((order: any) => (
                 <tr key={order.id} className={`transition-colors duration-200 ${getSLARowColor(order)}`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -274,6 +317,83 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-700">
+              Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+              <span className="font-medium">{Math.min(endIndex, orders.length)}</span> of{" "}
+              <span className="font-medium">{orders.length}</span> orders
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-teal-50 border border-gray-300"
+                }`}
+              >
+                Previous
+              </button>
+
+              {/* Page numbers */}
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                  // Show first page, last page, current page, and pages around current
+                  const showPage =
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1);
+
+                  const showEllipsis =
+                    (page === currentPage - 2 && currentPage > 3) ||
+                    (page === currentPage + 2 && currentPage < totalPages - 2);
+
+                  if (showEllipsis) {
+                    return (
+                      <span key={page} className="px-2 text-gray-400">
+                        ...
+                      </span>
+                    );
+                  }
+
+                  if (!showPage) return null;
+
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === page
+                          ? "bg-teal-600 text-white"
+                          : "bg-white text-gray-700 hover:bg-teal-50 border border-gray-300"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  currentPage === totalPages
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-700 hover:bg-teal-50 border border-gray-300"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* QR Code Modal */}
       <QRModal
