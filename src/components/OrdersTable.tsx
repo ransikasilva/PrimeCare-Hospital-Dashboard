@@ -1,15 +1,19 @@
 import { useState, useMemo } from "react";
 import { useOrders } from "@/hooks/useApi";
-import { QrCode, Eye, Search } from "lucide-react";
+import { QrCode, Eye, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { QRModal } from "./QRModal";
 import { EnhancedOrderDetailModal } from "./modals/EnhancedOrderDetailModal";
 
 interface OrdersTableProps {
   priorityFilter?: string;
   statusFilter?: string;
+  sortByDate?: string;
 }
 
-export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status" }: OrdersTableProps = {}) {
+type SortField = 'order_number' | 'urgency' | 'center_name' | 'status' | 'created_at';
+type SortDirection = 'asc' | 'desc' | null;
+
+export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status", sortByDate = "newest" }: OrdersTableProps = {}) {
   const filters = useMemo(() => ({}), []); // Fetch all orders (no status filter)
   const { data: ordersResponse, loading, error } = useOrders(filters);
   // State declarations
@@ -19,6 +23,8 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const ordersPerPage = 10;
 
   // Deduplicate orders that may have multiple QR codes
@@ -33,9 +39,35 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
     return unique;
   }, []);
 
-  // Apply filters
+  // Handle sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortField(null);
+        setSortDirection(null);
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-gray-400" />;
+    }
+    if (sortDirection === 'asc') {
+      return <ArrowUp className="h-4 w-4 text-teal-600" />;
+    }
+    return <ArrowDown className="h-4 w-4 text-teal-600" />;
+  };
+
+  // Apply filters and sorting
   const orders = useMemo(() => {
-    return deduplicatedOrders.filter((order: any) => {
+    let filtered = deduplicatedOrders.filter((order: any) => {
       // Filter by priority
       const priorityMatch = priorityFilter === "All Priorities" ||
         order.urgency?.toLowerCase() === priorityFilter.toLowerCase();
@@ -52,7 +84,62 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
 
       return priorityMatch && statusMatch && searchMatch;
     });
-  }, [deduplicatedOrders, priorityFilter, statusFilter, searchQuery]);
+
+    // Apply column sorting (from clicking headers)
+    if (sortField && sortDirection) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue = a[sortField];
+        let bValue = b[sortField];
+
+        // Handle null/undefined values
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        // Convert to lowercase for string comparison
+        if (typeof aValue === 'string') aValue = aValue.toLowerCase();
+        if (typeof bValue === 'string') bValue = bValue.toLowerCase();
+
+        // Priority sorting (urgent > routine)
+        if (sortField === 'urgency') {
+          const priorityOrder: any = { 'emergency': 3, 'urgent': 2, 'routine': 1 };
+          aValue = priorityOrder[aValue] || 0;
+          bValue = priorityOrder[bValue] || 0;
+        }
+
+        // Status sorting (custom order)
+        if (sortField === 'status') {
+          const statusOrder: any = {
+            'pending_rider_assignment': 1,
+            'assigned': 2,
+            'picked_up': 3,
+            'in_transit': 4,
+            'delivered': 5,
+            'cancelled': 6
+          };
+          aValue = statusOrder[aValue] || 0;
+          bValue = statusOrder[bValue] || 0;
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    } else {
+      // Apply date sorting from dropdown filter (when no column sorting is active)
+      filtered = [...filtered].sort((a, b) => {
+        const aDate = new Date(a.created_at || 0).getTime();
+        const bDate = new Date(b.created_at || 0).getTime();
+
+        if (sortByDate === 'newest') {
+          return bDate - aDate; // Newest first (descending)
+        } else {
+          return aDate - bDate; // Oldest first (ascending)
+        }
+      });
+    }
+
+    return filtered;
+  }, [deduplicatedOrders, priorityFilter, statusFilter, searchQuery, sortField, sortDirection, sortByDate]);
 
   // Pagination calculations
   const totalPages = Math.ceil(orders.length / ordersPerPage);
@@ -184,14 +271,32 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gradient-to-r from-blue-50 to-indigo-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Order ID
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => handleSort('order_number')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Order ID</span>
+                  {getSortIcon('order_number')}
+                </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Priority
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => handleSort('urgency')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Priority</span>
+                  {getSortIcon('urgency')}
+                </div>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Collection Center
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => handleSort('center_name')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Collection Center</span>
+                  {getSortIcon('center_name')}
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Samples
@@ -199,8 +304,14 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Rider
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
+              <th
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => handleSort('status')}
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Status</span>
+                  {getSortIcon('status')}
+                </div>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 SLA Status

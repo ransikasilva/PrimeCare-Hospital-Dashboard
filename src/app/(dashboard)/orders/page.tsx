@@ -7,14 +7,15 @@ import { useMyHospitals } from "@/hooks/useApi";
 export default function OrdersPage() {
   const [priorityFilter, setPriorityFilter] = useState("All Priorities");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [sortByDate, setSortByDate] = useState("newest");
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       <div className="flex justify-between items-center">
         <div>
-          <h1 
+          <h1
             className="font-semibold"
-            style={{ 
+            style={{
               fontSize: '32px',
               fontWeight: '600',
               color: '#2C3E50'
@@ -22,8 +23,8 @@ export default function OrdersPage() {
           >
             Live Orders
           </h1>
-          <p 
-            style={{ 
+          <p
+            style={{
               color: '#7B8794',
               fontSize: '14px',
               marginTop: '8px'
@@ -64,6 +65,19 @@ export default function OrdersPage() {
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <select
+            className="px-3 py-2 border rounded-lg transition-all duration-200 focus:border-teal-500 focus:outline-none"
+            style={{
+              borderColor: '#E5E7EB',
+              backgroundColor: '#FFFFFF',
+              color: '#2C3E50'
+            }}
+            value={sortByDate}
+            onChange={(e) => setSortByDate(e.target.value)}
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
           <button
             className="px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:opacity-90"
             style={{
@@ -80,7 +94,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <OrdersTable priorityFilter={priorityFilter} statusFilter={statusFilter} />
+      <OrdersTable priorityFilter={priorityFilter} statusFilter={statusFilter} sortByDate={sortByDate} />
     </div>
   );
 }
