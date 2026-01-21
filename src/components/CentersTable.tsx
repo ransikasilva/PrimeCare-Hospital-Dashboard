@@ -1,7 +1,8 @@
 "use client";
 
 import { useHospitalDashboard, usePendingApprovals, useMyHospitals, useApproveCollectionCenter } from "@/hooks/useApi";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { CollectionCenterModal } from "./CollectionCenterModal";
 
 interface CentersTableProps {
@@ -13,6 +14,7 @@ interface CentersTableProps {
 }
 
 export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter = 'all', sortBy = 'name', sortOrder = 'asc' }: CentersTableProps) {
+  const searchParams = useSearchParams();
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [selectedCenter, setSelectedCenter] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,9 +68,22 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
     }
   });
 
-  let centers = Array.from(centerMap.values());
+  const allCombinedCenters = Array.from(centerMap.values());
+  let centers = allCombinedCenters;
 
   console.log('📋 Combined centers:', centers.length, centers.map((c: any) => ({ name: c.center_name, hospital_status: c.hospital_approval_status, overall: c.status })));
+
+  // Check for URL parameter to auto-open modal
+  useEffect(() => {
+    const centerId = searchParams.get('id');
+    if (centerId && centerMap.size > 0) {
+      const foundCenter = centerMap.get(centerId);
+      if (foundCenter) {
+        setSelectedCenter(foundCenter);
+        setIsModalOpen(true);
+      }
+    }
+  }, [searchParams, centerMap.size]);
 
   // Apply status filter - use hospital_approval_status if available (for multi-hospital centers)
   if (statusFilter !== 'all') {

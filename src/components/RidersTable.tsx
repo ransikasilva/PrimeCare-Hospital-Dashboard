@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMyHospitals, usePendingApprovals, useRiders, useApproveRider } from "@/hooks/useApi";
 import { RiderModal } from "./RiderModal";
 import apiClient from "@/lib/api";
@@ -13,6 +14,7 @@ interface RidersTableProps {
 }
 
 export function RidersTable({ searchTerm = '', statusFilter = 'all', sortBy = 'name', sortOrder = 'asc' }: RidersTableProps) {
+  const searchParams = useSearchParams();
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
   const [selectedRider, setSelectedRider] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,6 +37,18 @@ export function RidersTable({ searchTerm = '', statusFilter = 'all', sortBy = 'n
     riderMap.set(rider.id, rider);
   });
   let riders = Array.from(riderMap.values());
+
+  // Check for URL parameter to auto-open modal
+  useEffect(() => {
+    const riderId = searchParams.get('id');
+    if (riderId && riderMap.size > 0) {
+      const foundRider = riderMap.get(riderId);
+      if (foundRider) {
+        setSelectedRider(foundRider);
+        setIsModalOpen(true);
+      }
+    }
+  }, [searchParams, riderMap.size]);
 
   // Apply status filter
   if (statusFilter !== 'all') {

@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useOrders } from "@/hooks/useApi";
 import { QrCode, Eye, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { QRModal } from "./QRModal";
@@ -14,6 +15,7 @@ type SortField = 'order_number' | 'urgency' | 'center_name' | 'status' | 'create
 type SortDirection = 'asc' | 'desc' | null;
 
 export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status", sortByDate = "newest" }: OrdersTableProps = {}) {
+  const searchParams = useSearchParams();
   const filters = useMemo(() => ({}), []); // Fetch all orders (no status filter)
   const { data: ordersResponse, loading, error } = useOrders(filters);
   // State declarations
@@ -29,15 +31,25 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
 
   // Deduplicate orders that may have multiple QR codes
   const rawOrders = Array.isArray((ordersResponse?.data as any)?.orders) ? (ordersResponse?.data as any).orders : [];
-  const deduplicatedOrders = rawOrders.reduce((unique: any[], order: any) => {
-    const existingIndex = unique.findIndex(u => u.id === order.id);
-    if (existingIndex === -1) {
-      // First time seeing this order - add it
-      unique.push(order);
+  const orderMap = new Map();
+  rawOrders.forEach((order: any) => {
+    if (!orderMap.has(order.id)) {
+      orderMap.set(order.id, order);
     }
-    // If duplicate, ignore it (keep the first occurrence)
-    return unique;
-  }, []);
+  });
+  const deduplicatedOrders = Array.from(orderMap.values());
+
+  // Check for URL parameter to auto-open modal
+  useEffect(() => {
+    const orderId = searchParams.get('id');
+    if (orderId && orderMap.size > 0) {
+      const foundOrder = orderMap.get(orderId);
+      if (foundOrder) {
+        setSelectedOrderId(orderId);
+        setShowDetailModal(true);
+      }
+    }
+  }, [searchParams, orderMap.size]);
 
   // Handle sorting
   const handleSort = (field: SortField) => {
