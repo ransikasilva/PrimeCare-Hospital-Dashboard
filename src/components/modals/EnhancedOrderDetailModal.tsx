@@ -162,6 +162,36 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
+  const pickupStart = orderDetails?.order?.pickup_started_at || orderDetails?.order?.created_at;
+const pickupActualMinutes = orderDetails?.order?.picked_up_at && pickupStart
+  ? (new Date(orderDetails.order.picked_up_at).getTime() - new Date(pickupStart).getTime()) / (1000 * 60)
+  : null;
+const pickupLateBy = pickupActualMinutes !== null && orderDetails?.order?.pickup_threshold_minutes
+  ? Math.max(0, Math.round(pickupActualMinutes - orderDetails.order.pickup_threshold_minutes))
+  : null;
+
+const deliveryStart = orderDetails?.order?.delivery_started_at || orderDetails?.order?.picked_up_at;
+const deliveryActualMinutes = orderDetails?.order?.delivered_at && deliveryStart
+  ? (new Date(orderDetails.order.delivered_at).getTime() - new Date(deliveryStart).getTime()) / (1000 * 60)
+  : null;
+const deliveryLateBy = deliveryActualMinutes !== null && orderDetails?.order?.standard_delivery_threshold_minutes
+  ? Math.max(0, Math.round(deliveryActualMinutes - orderDetails.order.standard_delivery_threshold_minutes))
+  : null;
+
+console.log('==== SLA CALCULATION ====');
+console.log('Order:', orderDetails?.order);
+console.log('pickupStart:', pickupStart);
+console.log('picked_up_at:', orderDetails?.order?.picked_up_at);
+console.log('pickup_threshold_minutes:', orderDetails?.order?.pickup_threshold_minutes);
+console.log('pickupActualMinutes:', pickupActualMinutes);
+console.log('pickupLateBy:', pickupLateBy);
+console.log('deliveryStart:', deliveryStart);
+console.log('delivered_at:', orderDetails?.order?.delivered_at);
+console.log('standard_delivery_threshold_minutes:', orderDetails?.order?.standard_delivery_threshold_minutes);
+console.log('deliveryActualMinutes:', deliveryActualMinutes);
+console.log('deliveryLateBy:', deliveryLateBy);
+console.log('=========================');
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString('en-US', {
@@ -339,63 +369,127 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
                           })()}
                         </div>
 
-                        {/* SLA Delay Type Indicator */}
+                        {/* SLA Status - Real-time calculation */}
                         {(() => {
+                          if (orderDetails.order?.status === 'cancelled') return null;
+
                           const now = new Date();
                           const createdAt = orderDetails.order?.created_at ? new Date(orderDetails.order.created_at) : null;
-                          const assignedAt = orderDetails.order?.assigned_at ? new Date(orderDetails.order.assigned_at) : null;
                           const pickedUpAt = orderDetails.order?.picked_up_at ? new Date(orderDetails.order.picked_up_at) : null;
+                          const deliveredAt = orderDetails.order?.delivered_at ? new Date(orderDetails.order.delivered_at) : null;
+
+                          // Get real SLA thresholds from backend (or use defaults)
+                          const pickupThreshold = orderDetails.order?.pickup_threshold_minutes || 15;
+                          const urgentDeliveryThreshold = orderDetails.order?.urgent_delivery_threshold_minutes || 30;
+                          const standardDeliveryThreshold = orderDetails.order?.standard_delivery_threshold_minutes || 45;
 
                           const delays = [];
+                          const isUrgent = orderDetails.order?.urgency === 'urgent' || orderDetails.order?.urgency === 'emergency';
+                          const deliveryThreshold = isUrgent ? urgentDeliveryThreshold : standardDeliveryThreshold;
 
-                          // Check pickup response delay (assigned → picked up)
-                          if (orderDetails.order?.status === 'assigned' && assignedAt) {
-                            const minutesElapsed = Math.floor((now.getTime() - assignedAt.getTime()) / (1000 * 60));
-                            if (minutesElapsed > 15) {
+                          // For DELIVERED orders - use backend late flags
+                          if (orderDetails.order?.status === 'delivered') {
+                            console.log('🔍 Delivered order SLA check:', {
+                              pickup_late: orderDetails.order?.pickup_late,
+                              delivery_late: orderDetails.order?.delivery_late,
+                              status: orderDetails.order?.status
+                            });
+                            const wasPickupLate = orderDetails.order?.pickup_late;
+                            const wasDeliveryLate = orderDetails.order?.delivery_late;
+
+                            if (wasPickupLate) {
                               delays.push({
-                                type: 'Pickup Response Delay',
-                                message: `Rider should have picked up ${minutesElapsed - 15} min ago (15 min SLA)`,
-                                severity: 'critical'
+                                type: 'Pickup was Late',
+                                message: `Pickup was late by ${pickupLateBy ?? 0} minute${pickupLateBy && pickupLateBy > 1 ? 's' : ''} (threshold: ${pickupThreshold} min)`,
+                                severity: 'warning'
                               });
                             }
-                          }
 
-                          // Check urgent total delay (created → delivered)
-                          if (orderDetails.order?.urgency === 'urgent' && createdAt && orderDetails.order?.status !== 'delivered') {
-                            const minutesElapsed = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
-                            if (minutesElapsed > 45) {
+                            if (wasDeliveryLate) {
                               delays.push({
-                                type: 'Urgent Delivery Delay',
-                                message: `Order should have been delivered ${minutesElapsed - 45} min ago (45 min total SLA)`,
-                                severity: 'critical'
+                                type: isUrgent ? 'Urgent Delivery was Late' : 'Delivery was Late',
+                                message: `Delivery was late by ${deliveryLateBy ?? 0} minute${deliveryLateBy && deliveryLateBy > 1 ? 's' : ''} (threshold: ${deliveryThreshold} min)`,
+                                severity: 'warning'
                               });
                             }
-                          }
-
-                          // Check standard delivery delay (picked up → delivered for routine)
-                          if (orderDetails.order?.urgency === 'routine' && pickedUpAt && orderDetails.order?.status !== 'delivered') {
-                            const minutesElapsed = Math.floor((now.getTime() - pickedUpAt.getTime()) / (1000 * 60));
-                            if (minutesElapsed > 90) {
-                              delays.push({
-                                type: 'Standard Delivery Delay',
-                                message: `Delivery should have completed ${minutesElapsed - 90} min ago (90 min SLA)`,
-                                severity: 'critical'
-                              });
-                            }
-                          }
-
-                          if (delays.length > 0) {
-                            return (
-                              <div className="mt-3 space-y-2">
-                                {delays.map((delay, index) => (
-                                  <div key={index} className="flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                                    <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                      <p className="text-xs font-semibold text-red-800">{delay.type}</p>
-                                      <p className="text-xs text-red-700">{delay.message}</p>
+                            if (delays.length > 0) {
+                              return (
+                                <div className="mt-3 space-y-2">
+                                  {delays.map((delay, index) => (
+                                    <div key={index} className="flex items-start gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                      <AlertTriangle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                                      <div>
+                                        <p className="text-sm font-semibold text-orange-800">{delay.type}</p>
+                                        <p className="text-sm text-orange-700">{delay.message}</p>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  ))}
+                                </div>
+                              );
+                            }
+
+                            // Delivered on time
+                            return (
+                              <div className="mt-3">
+                                <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  <p className="text-xs font-medium text-green-700">Delivered On Time</p>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          // For IN-PROGRESS orders - check current delays
+                          if (createdAt) {
+                            // Check pickup delay (created → picked up)
+                            if (!pickedUpAt) {
+                              const minutesElapsed = Math.floor((now.getTime() - createdAt.getTime()) / (1000 * 60));
+                              if (minutesElapsed > pickupThreshold) {
+                                const lateBy = minutesElapsed - pickupThreshold;
+                                delays.push({
+                                  type: 'Pickup Delay',
+                                  message: `Pickup is late by ${lateBy} minute${lateBy > 1 ? 's' : ''} (threshold: ${pickupThreshold} min)`,
+                                  severity: 'critical'
+                                });
+                              }
+                            }
+
+                            // Check delivery delay (picked up → now)
+                            if (pickedUpAt) {
+                              const minutesElapsed = Math.floor((now.getTime() - pickedUpAt.getTime()) / (1000 * 60));
+                              if (minutesElapsed > deliveryThreshold) {
+                                const lateBy = minutesElapsed - deliveryThreshold;
+                                delays.push({
+                                  type: isUrgent ? 'Urgent Delivery Delay' : 'Delivery Delay',
+                                  message: `Delivery is late by ${lateBy} minute${lateBy > 1 ? 's' : ''} (threshold: ${deliveryThreshold} min)`,
+                                  severity: 'critical'
+                                });
+                              }
+                            }
+
+                            if (delays.length > 0) {
+                              return (
+                                <div className="mt-3 space-y-2">
+                                  {delays.map((delay, index) => (
+                                    <div key={index} className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                      <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                      <div>
+                                        <p className="text-sm font-semibold text-red-800">{delay.type}</p>
+                                        <p className="text-sm text-red-700">{delay.message}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+
+                            // In progress and on time
+                            return (
+                              <div className="mt-3">
+                                <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                                  <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                  <p className="text-xs font-medium text-green-700">On Time</p>
+                                </div>
                               </div>
                             );
                           }

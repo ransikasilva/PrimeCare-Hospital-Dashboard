@@ -381,14 +381,14 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
                         <span className="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-300 shadow-sm">
                           🚨 LATE
                         </span>
-                        {order.pickup_late && order.pickup_late_by_minutes && (
+                        {order.pickup_late && (
                           <span className="text-xs text-red-700 font-medium">
-                            Pickup: +{order.pickup_late_by_minutes}m
+                            Pickup Delay
                           </span>
                         )}
-                        {order.delivery_late && order.delivery_late_by_minutes && (
+                        {order.delivery_late && (
                           <span className="text-xs text-red-700 font-medium">
-                            Delivery: +{order.delivery_late_by_minutes}m
+                            {order.urgency === 'urgent' || order.urgency === 'emergency' ? 'Urgent Delivery Delay' : 'Delivery Delay'}
                           </span>
                         )}
                       </div>
