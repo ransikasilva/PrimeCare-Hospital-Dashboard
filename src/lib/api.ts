@@ -687,10 +687,10 @@ class ApiClient {
   }
 
   // Rider-Center Assignment Management
-  async assignRiderToCenter(riderId: string, centerId: string) {
+  async assignRiderToCenter(riderId: string, centerId: string, hospitalId?: string) {
     return this.request('/api/rider-center-assignments/assign', {
       method: 'POST',
-      body: JSON.stringify({ rider_id: riderId, center_id: centerId }),
+      body: JSON.stringify({ rider_id: riderId, center_id: centerId, hospital_id: hospitalId }),
     });
   }
 
@@ -701,15 +701,18 @@ class ApiClient {
     });
   }
 
-  async bulkAssignRiders(riderIds: string[], centerId: string) {
+  async bulkAssignRiders(riderIds: string[], centerId: string, hospitalId?: string) {
     return this.request('/api/rider-center-assignments/bulk-assign', {
       method: 'POST',
-      body: JSON.stringify({ rider_ids: riderIds, center_id: centerId }),
+      body: JSON.stringify({ rider_ids: riderIds, center_id: centerId, hospital_id: hospitalId }),
     });
   }
 
-  async getRidersForCenter(centerId: string) {
-    return this.request<any[]>(`/api/rider-center-assignments/center/${centerId}/riders`);
+  async getRidersForCenter(centerId: string, hospitalId?: string) {
+    const url = hospitalId
+      ? `/api/rider-center-assignments/center/${centerId}/riders?hospital_id=${hospitalId}`
+      : `/api/rider-center-assignments/center/${centerId}/riders`;
+    return this.request<any[]>(url);
   }
 
   async getCentersForRider(riderId: string) {

@@ -148,10 +148,11 @@ export function CollectionCenterModal({
     if (!center) return;
 
     console.log('🚀 FETCHING RIDERS FOR CENTER:', center.id, center.center_name);
+    console.log('🚀 HOSPITAL ID:', hospitalId);
     setLoadingRiders(true);
     try {
       const [assignedResponse, unassignedResponse] = await Promise.all([
-        apiClient.getRidersForCenter(center.id),
+        apiClient.getRidersForCenter(center.id, hospitalId),
         apiClient.getUnassignedRidersForCenter(center.id, hospitalId)
       ]);
       console.log('🚀 RAW RESPONSES:', { assignedResponse, unassignedResponse });
@@ -192,7 +193,7 @@ export function CollectionCenterModal({
     if (!center) return;
 
     try {
-      const response = await apiClient.assignRiderToCenter(riderId, center.id);
+      const response = await apiClient.assignRiderToCenter(riderId, center.id, hospitalId);
       if (response.success) {
         await fetchRiders();
         setSelectedRidersToAdd([]);
@@ -229,7 +230,7 @@ export function CollectionCenterModal({
     if (!center || selectedRidersToAdd.length === 0) return;
 
     try {
-      const response = await apiClient.bulkAssignRiders(selectedRidersToAdd, center.id);
+      const response = await apiClient.bulkAssignRiders(selectedRidersToAdd, center.id, hospitalId);
       if (response.success) {
         await fetchRiders();
         setSelectedRidersToAdd([]);
