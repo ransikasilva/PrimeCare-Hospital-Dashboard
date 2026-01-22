@@ -88,12 +88,31 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
   // Apply status filter - use hospital_approval_status if available (for multi-hospital centers)
   if (statusFilter !== 'all') {
     centers = centers.filter((center: any) => {
-      const displayStatus = center.hospital_approval_status || center.status;
-      const matches = displayStatus === statusFilter;
-      if (statusFilter === 'rejected') {
-        console.log('🔍 Filtering rejected:', center.center_name, 'hospital_approval_status:', center.hospital_approval_status, 'hq_approval_status:', center.hq_approval_status, 'status:', center.status, 'displayStatus:', displayStatus, 'matches:', matches);
+      const hospitalStatus = center.hospital_approval_status || center.status;
+
+      // Handle pending_hospital_approval filter
+      if (statusFilter === 'pending_hospital_approval') {
+        // Match both 'pending' hospital status and 'pending_hospital_approval' overall status
+        return hospitalStatus === 'pending' ||
+               hospitalStatus === 'pending_hospital_approval' ||
+               center.status === 'pending_hospital_approval';
       }
-      return matches;
+
+      // Handle approved filter
+      if (statusFilter === 'approved') {
+        return hospitalStatus === 'approved' ||
+               hospitalStatus === 'active' ||
+               center.status === 'approved';
+      }
+
+      // Handle rejected filter
+      if (statusFilter === 'rejected') {
+        console.log('🔍 Filtering rejected:', center.center_name, 'hospital_approval_status:', center.hospital_approval_status, 'hq_approval_status:', center.hq_approval_status, 'status:', center.status, 'hospitalStatus:', hospitalStatus);
+        return hospitalStatus === 'rejected' || center.status === 'rejected';
+      }
+
+      // Exact match for other statuses
+      return hospitalStatus === statusFilter;
     });
   }
 
@@ -379,8 +398,22 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
 
                 const hqStatus = getHQApprovalStatus(center.status);
 
+                // Determine row background color based on status
+                const getRowClass = () => {
+                  const hospitalStatus = center.hospital_approval_status || center.status;
+                  if (hospitalStatus === 'pending' ||
+                      hospitalStatus === 'pending_hospital_approval' ||
+                      center.status === 'pending_hospital_approval') {
+                    return "bg-yellow-50 hover:bg-yellow-100 cursor-pointer transition-colors duration-200";
+                  }
+                  if (center.status === 'pending_hq_approval') {
+                    return "bg-teal-50 hover:bg-teal-100 cursor-pointer transition-colors duration-200";
+                  }
+                  return "hover:bg-gray-50 cursor-pointer transition-colors duration-200";
+                };
+
                 return (
-                  <tr key={center.id} className="hover:bg-teal-50 cursor-pointer transition-colors duration-200" onClick={() => handleViewCenter(center)}>
+                  <tr key={center.id} className={getRowClass()} onClick={() => handleViewCenter(center)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-2 h-12 bg-green-400 rounded-l-md mr-3"></div>

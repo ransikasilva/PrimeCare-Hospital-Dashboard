@@ -308,6 +308,11 @@ export default function DashboardPage() {
                 ) : (
                   collectionCenters.map((center: any) => {
                     const statusConfig = getStatusConfig(center.status || 'active');
+                    // Calculate completion rate on frontend (excluding cancelled orders)
+                    const validOrders = center.total_orders - (center.cancelled_orders || 0);
+                    const completionRate = validOrders > 0
+                      ? Math.round((center.delivered_orders / validOrders) * 100)
+                      : 0; // Default to 0% if no valid orders
                     return (
                       <div 
                         key={center.id}
@@ -350,7 +355,7 @@ export default function DashboardPage() {
                             </div>
                             
                             <div className="text-center">
-                              <div className="font-bold text-2xl text-gray-800">{center.completion_rate || 95}%</div>
+                              <div className="font-bold text-2xl text-gray-800">{completionRate}%</div>
                               <div className="text-xs text-gray-500 uppercase tracking-wider">Success Rate</div>
                             </div>
 
