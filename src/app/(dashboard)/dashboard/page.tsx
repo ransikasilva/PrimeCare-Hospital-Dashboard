@@ -63,12 +63,61 @@ export default function DashboardPage() {
 
   // Extract collection centers and alerts from real data, remove duplicates by ID
   const collectionCentersRaw = (dashboardData?.data as any)?.collection_centers || [];
-  const alertsRaw = (dashboardData?.data as any)?.alerts || [];
+  const [lateOrderAlerts, setLateOrderAlerts] = useState<any[]>([]);
 
   // Remove duplicates based on ID
   const collectionCenters = collectionCentersRaw.filter((center: any, index: number, self: any[]) =>
     index === self.findIndex((c: any) => c.id === center.id)
   );
+
+  // Fetch late orders for alerts (only today's orders)
+  useEffect(() => {
+    const fetchLateOrders = async () => {
+      try {
+        const response = await apiClient.getHospitalOrders();
+        if (response.success && response.data) {
+          const orders = (response.data as any).orders || [];
+
+          // Get today's date at midnight
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          // Filter for late orders created today
+          const lateOrders = orders.filter((order: any) => {
+            const orderDate = new Date(order.created_at);
+            orderDate.setHours(0, 0, 0, 0);
+            const isToday = orderDate.getTime() === today.getTime();
+            const isLate = order.pickup_late || order.delivery_late;
+            return isToday && isLate;
+          });
+
+          const lateAlerts = lateOrders.map((order: any) => {
+            const lateType = order.pickup_late ? 'Pickup' : 'Delivery';
+
+            return {
+              id: `late-${order.id}`,
+              type: 'critical',
+              title: `Late ${lateType}: ${order.order_number}`,
+              message: `${order.center_name}`,
+              time: 'Just now',
+              actionText: 'View Order',
+              actionLink: `/orders?id=${order.id}`,
+              icon: AlertTriangle
+            };
+          });
+
+          setLateOrderAlerts(lateAlerts);
+        }
+      } catch (error) {
+        console.error('Error fetching late orders for alerts:', error);
+      }
+    };
+
+    fetchLateOrders();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchLateOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Create quickActions with real data
   const quickActions = [
@@ -105,9 +154,9 @@ export default function DashboardPage() {
       count: `${metrics?.sla_compliance?.value || 0}% SLA`
     }
   ];
-  const alerts = alertsRaw.filter((alert: any, index: number, self: any[]) =>
-    index === self.findIndex((a: any) => a.id === alert.id)
-  );
+
+  // Combine alerts from API and late orders
+  const alerts = lateOrderAlerts;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -309,10 +358,17 @@ export default function DashboardPage() {
                   collectionCenters.map((center: any) => {
                     const statusConfig = getStatusConfig(center.status || 'active');
                     // Calculate completion rate on frontend (excluding cancelled orders)
+                    console.log('Center data:', {
+                      name: center.center_name,
+                      total_orders: center.total_orders,
+                      delivered_orders: center.delivered_orders,
+                      cancelled_orders: center.cancelled_orders
+                    });
                     const validOrders = center.total_orders - (center.cancelled_orders || 0);
                     const completionRate = validOrders > 0
                       ? Math.round((center.delivered_orders / validOrders) * 100)
                       : 0; // Default to 0% if no valid orders
+                    console.log('Calculated completion rate:', completionRate);
                     return (
                       <div 
                         key={center.id}
@@ -396,7 +452,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6">
               {alerts.length === 0 ? (
                 <div className="text-center py-8">
                   <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -404,47 +460,49 @@ export default function DashboardPage() {
                   <p className="text-sm text-gray-400 mt-1">System alerts will appear here</p>
                 </div>
               ) : (
-                alerts.map((alert: any) => {
-                  const alertConfig = getAlertConfig(alert.type || 'info');
-                  const Icon = alert.icon ? alert.icon : AlertTriangle;
-                  return (
-                    <div 
-                      key={alert.id}
-                      className="group p-4 rounded-2xl transition-all duration-300 hover:transform hover:scale-[1.02]"
-                      style={{
-                        background: alertConfig.bg,
-                        border: `1px solid ${alertConfig.border}30`
-                      }}
-                    >
-                      <div className="flex items-start space-x-4">
-                        <div 
-                          className="w-10 h-10 rounded-xl flex items-center justify-center"
-                          style={{ backgroundColor: alertConfig.iconBg }}
-                        >
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-800 mb-1">{alert.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">{alert.message}</p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">{alert.time || alert.created_at}</span>
-                            <Link href={alert.actionLink || '/orders'}>
-                              <button 
-                                className="text-xs font-semibold px-3 py-1 rounded-full transition-all duration-200 hover:opacity-80"
-                                style={{
-                                  backgroundColor: alertConfig.iconBg,
-                                  color: 'white'
-                                }}
-                              >
-                                {alert.actionText || 'View'}
-                              </button>
-                            </Link>
+                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2">
+                  {alerts.map((alert: any) => {
+                    const alertConfig = getAlertConfig(alert.type || 'info');
+                    const Icon = alert.icon ? alert.icon : AlertTriangle;
+                    return (
+                      <div
+                        key={alert.id}
+                        className="group p-4 rounded-2xl transition-all duration-300 hover:transform hover:scale-[1.02]"
+                        style={{
+                          background: alertConfig.bg,
+                          border: `1px solid ${alertConfig.border}30`
+                        }}
+                      >
+                        <div className="flex items-start space-x-4">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center"
+                            style={{ backgroundColor: alertConfig.iconBg }}
+                          >
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-800 mb-1">{alert.title}</h4>
+                            <p className="text-sm text-gray-600 mb-2">{alert.message}</p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">{alert.time || alert.created_at}</span>
+                              <Link href={alert.actionLink || '/orders'}>
+                                <button
+                                  className="text-xs font-semibold px-3 py-1 rounded-full transition-all duration-200 hover:opacity-80"
+                                  style={{
+                                    backgroundColor: alertConfig.iconBg,
+                                    color: 'white'
+                                  }}
+                                >
+                                  {alert.actionText || 'View'}
+                                </button>
+                              </Link>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
