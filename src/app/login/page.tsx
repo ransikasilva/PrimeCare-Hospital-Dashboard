@@ -11,7 +11,7 @@ export default function LoginPage() {
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { login, error, clearError } = useAuth();
+  const { login, logout, error, clearError } = useAuth();
   const router = useRouter();
 
   // Forgot Password States
@@ -208,8 +208,12 @@ export default function LoginPage() {
           router.push("/dashboard");
         }
       } else {
-        // Non-hospital users go directly to dashboard
-        router.push("/dashboard");
+        // Reject non-hospital users
+        await logout();
+        clearError();
+        alert('Access denied. This dashboard is only for hospital network administrators. Please use the Operations dashboard if you are an operations team member.');
+        setIsLoading(false);
+        return;
       }
     } catch (error: any) {
       console.error('Login failed:', error);

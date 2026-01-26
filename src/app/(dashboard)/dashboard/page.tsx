@@ -358,17 +358,15 @@ export default function DashboardPage() {
                   collectionCenters.map((center: any) => {
                     const statusConfig = getStatusConfig(center.status || 'active');
                     // Calculate completion rate on frontend (excluding cancelled orders)
-                    console.log('Center data:', {
-                      name: center.center_name,
-                      total_orders: center.total_orders,
-                      delivered_orders: center.delivered_orders,
-                      cancelled_orders: center.cancelled_orders
-                    });
-                    const validOrders = center.total_orders - (center.cancelled_orders || 0);
+                    // Convert strings to numbers for proper calculation
+                    const totalOrders = Number(center.total_orders) || 0;
+                    const deliveredOrders = Number(center.delivered_orders) || 0;
+                    const cancelledOrders = Number(center.cancelled_orders) || 0;
+
+                    const validOrders = totalOrders - cancelledOrders;
                     const completionRate = validOrders > 0
-                      ? Math.round((center.delivered_orders / validOrders) * 100)
+                      ? Math.round((deliveredOrders / validOrders) * 100)
                       : 0; // Default to 0% if no valid orders
-                    console.log('Calculated completion rate:', completionRate);
                     return (
                       <div 
                         key={center.id}
