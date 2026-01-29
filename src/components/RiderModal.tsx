@@ -120,13 +120,15 @@ export function RiderModal({
 
         const response = await apiClient.getRiderKMRange(hospitalId, today, today, rider.id);
 
-        // Use rider's total_km from riders table (accumulated KM including handovers)
+        // Use correct KM values from API response
         const totalKm = response?.data?.rider_total_km || 0;
+        const weeklyKm = response?.data?.weekly_km || 0;
+        const monthlyKm = response?.data?.monthly_km || 0;
 
         setKmStats({
           daily_km: totalKm,
-          weekly_km: totalKm,
-          monthly_km: totalKm
+          weekly_km: weeklyKm,
+          monthly_km: monthlyKm
         });
       } catch (error) {
         console.error('Error fetching KM stats:', error);

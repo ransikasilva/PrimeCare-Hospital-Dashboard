@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import apiClient from '@/lib/api';
 
 interface RiderKMChartProps {
@@ -157,9 +157,6 @@ export function RiderKMChart({ riderId, riderName, hospitalId, startDate, endDat
                       <p className="font-semibold text-gray-900">{label}</p>
                       <p className="text-teal-600">
                         <span className="font-medium">KM:</span> {data.daily_km}
-                      </p>
-                      <p className="text-green-600">
-                        <span className="font-medium">Deliveries:</span> {data.deliveries}
                       </p>
                       {data.avg_time > 0 && (
                         <p className="text-purple-600">
