@@ -24,7 +24,7 @@ import {
   Activity,
   DollarSign,
 } from 'lucide-react';
-import { OrderDetailModal } from './OrderDetailModal';
+import { EnhancedOrderDetailModal } from './EnhancedOrderDetailModal';
 
 interface HospitalDetailModalProps {
   hospitalId: string;
@@ -451,7 +451,6 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vehicle</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Deliveries</th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -459,16 +458,17 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
                             <tr key={rider.id} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-gray-900">{rider.rider_name}</td>
                               <td className="px-4 py-3 text-sm text-gray-600">{rider.phone}</td>
-                              <td className="px-4 py-3 text-sm font-mono text-gray-600">{rider.vehicle_number || 'N/A'}</td>
+                              <td className="px-4 py-3 text-sm font-mono text-gray-600">{rider.vehicle_type || 'N/A'}</td>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 {rider.availability_status === 'available' ? (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Available</span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Online</span>
+                                ) : rider.availability_status === 'busy' ? (
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">Busy</span>
                                 ) : (
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Busy</span>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Offline</span>
                                 )}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-900">{rider.total_deliveries || 0}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{rider.rating || 'N/A'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -537,7 +537,7 @@ export function HospitalDetailModal({ hospitalId, isOpen, onClose }: HospitalDet
 
       {/* Order Detail Modal */}
       {showOrderModal && selectedOrderId && (
-        <OrderDetailModal
+        <EnhancedOrderDetailModal
           orderId={selectedOrderId}
           isOpen={showOrderModal}
           onClose={() => {

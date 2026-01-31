@@ -331,19 +331,8 @@ export function CentersTable({ searchTerm = '', statusFilter = 'all', typeFilter
 
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900">Collection Centers</h3>
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded">
-            Active ({activeCenters.length})
-          </button>
-          <button className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded">
-            Pending Hospital ({pendingHospitalCenters.length})
-          </button>
-          <button className="px-3 py-1 text-sm bg-teal-100 text-teal-800 rounded">
-            Pending HQ ({pendingHQCenters.length})
-          </button>
-        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

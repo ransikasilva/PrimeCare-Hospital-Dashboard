@@ -269,22 +269,11 @@ export function RidersTable({ searchTerm = '', statusFilter = 'all', sortBy = 'n
     );
   }
 
-  const pendingCount = riders.filter((r: any) => r.status === 'pending').length;
-  const activeCount = riders.filter((r: any) => r.status === 'approved').length;
-
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">Rider Management</h3>
-          <div className="flex space-x-2">
-            <button className="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded">
-              Pending ({pendingCount})
-            </button>
-            <button className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded">
-              Active ({activeCount})
-            </button>
-          </div>
         </div>
 
         {/* Date Selector for KM Data */}
