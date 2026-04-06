@@ -37,8 +37,13 @@ export default function ReportsPage() {
       try {
         const params = new URLSearchParams();
         params.append('period', selectedPeriod);
-        if (startDate) params.append('start_date', startDate);
-        if (endDate) params.append('end_date', endDate);
+
+        // Only add dates if BOTH start and end dates are selected
+        if (startDate && endDate) {
+          params.append('start_date', startDate);
+          params.append('end_date', endDate);
+        }
+        // If no dates selected, backend will use default period ranges (last 30/90/365 days)
 
         console.log('Fetching report with params:', {
           period: selectedPeriod,
@@ -315,36 +320,57 @@ export default function ReportsPage() {
 
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                const newStartDate = e.target.value;
-                console.log('Start Date changed to:', newStartDate);
-                setStartDate(newStartDate);
-
-                // If end date is empty, set it to today
-                if (!endDate && newStartDate) {
-                  const today = new Date().toISOString().split('T')[0];
-                  console.log('Auto-setting End Date to today:', today);
-                  setEndDate(today);
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+            <div className="relative">
+              {!startDate && (
+                <div
+                  onClick={() => {
+                    const input = document.getElementById('start-date-input') as HTMLInputElement;
+                    input?.showPicker?.();
+                  }}
+                  className="absolute inset-0 flex items-center px-3 pointer-events-none text-gray-400"
+                >
+                  Select start date
+                </div>
+              )}
+              <input
+                id="start-date-input"
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                style={!startDate ? { color: 'transparent' } : {}}
+              />
+            </div>
           </div>
 
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                console.log('End Date changed to:', e.target.value);
-                setEndDate(e.target.value);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
+            <div className="relative">
+              {!endDate && (
+                <div
+                  onClick={() => {
+                    const input = document.getElementById('end-date-input') as HTMLInputElement;
+                    input?.showPicker?.();
+                  }}
+                  className="absolute inset-0 flex items-center px-3 pointer-events-none text-gray-400"
+                >
+                  Select end date
+                </div>
+              )}
+              <input
+                id="end-date-input"
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  console.log('End Date changed to:', e.target.value);
+                  setEndDate(e.target.value);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                style={!endDate ? { color: 'transparent' } : {}}
+              />
+            </div>
           </div>
 
           <button
@@ -380,7 +406,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* Report Content */}
+      {/* Report Content - Always show (no date required) */}
       {!loading && !error && (
         <>
           {selectedReport === 'transport' && transportReport && (

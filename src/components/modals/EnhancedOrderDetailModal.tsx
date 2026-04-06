@@ -220,7 +220,9 @@ console.log('=========================');
     'pickup_started',
     'picked_up',
     'in_transit',
-    'delivery_started'
+    'delivery_started',
+    'handover_accepted',
+    'handover_confirmed'
   ].includes(orderDetails.order.status);
 
   if (!isOpen) return null;
