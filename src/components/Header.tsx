@@ -117,9 +117,22 @@ export function Header() {
         const response = await apiClient.getHospitalOrders();
         if (response.success && response.data) {
           const orders = (response.data as any).orders || [];
-          const lateOrders = orders.filter((order: any) =>
-            order.pickup_late || order.delivery_late
-          );
+          const now = new Date();
+
+          const lateOrders = orders.filter((order: any) => {
+            // Don't show cancelled orders
+            if (order.status === 'cancelled') return false;
+
+            // Only show if pickup_late or delivery_late is true
+            if (!order.pickup_late && !order.delivery_late) return false;
+
+            // Only show if order is less than 24 hours old
+            const orderDate = new Date(order.created_at);
+            const hoursDiff = (now.getTime() - orderDate.getTime()) / (1000 * 60 * 60);
+            if (hoursDiff > 24) return false;
+
+            return true;
+          });
 
           // Get dismissed notification IDs from localStorage
           const dismissedIds = JSON.parse(localStorage.getItem('dismissedNotifications') || '[]');
@@ -132,12 +145,25 @@ export function Header() {
                 ? order.pickup_late_by_minutes
                 : order.delivery_late_by_minutes;
 
+              // Calculate time ago
+              const orderDate = new Date(order.created_at);
+              const minutesAgo = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60));
+              let timeAgo;
+              if (minutesAgo < 1) {
+                timeAgo = 'Just now';
+              } else if (minutesAgo < 60) {
+                timeAgo = `${minutesAgo} ${minutesAgo === 1 ? 'minute' : 'minutes'} ago`;
+              } else {
+                const hoursAgo = Math.floor(minutesAgo / 60);
+                timeAgo = `${hoursAgo} ${hoursAgo === 1 ? 'hour' : 'hours'} ago`;
+              }
+
               return {
                 id: `late-${order.id}`,
                 type: 'urgent',
                 title: `🚨 Late ${lateType}: ${order.order_number}`,
-                message: `${order.center_name} - ${lateMinutes} minutes overdue`,
-                time: 'Just now',
+                message: `${order.center_name} - ${lateMinutes} ${lateMinutes === 1 ? 'minute' : 'minutes'} overdue`,
+                time: timeAgo,
                 unread: true,
                 orderId: order.id
               };

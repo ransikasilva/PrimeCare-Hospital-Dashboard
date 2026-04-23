@@ -82,8 +82,11 @@ export default function DashboardPage() {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
 
-          // Filter for late orders created today
+          // Filter for late orders created today (exclude cancelled orders)
           const lateOrders = orders.filter((order: any) => {
+            // Don't show cancelled orders
+            if (order.status === 'cancelled') return false;
+
             const orderDate = new Date(order.created_at);
             orderDate.setHours(0, 0, 0, 0);
             const isToday = orderDate.getTime() === today.getTime();
