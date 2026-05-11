@@ -33,6 +33,7 @@ interface OrderDetailProps {
   orderId: string;
   isOpen: boolean;
   onClose: () => void;
+  onOrderUpdate?: () => void;
 }
 
 interface OrderDetails {
@@ -78,12 +79,16 @@ interface OrderDetails {
   };
 }
 
-export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDetailProps) {
+export function EnhancedOrderDetailModal({ orderId, isOpen, onClose, onOrderUpdate }: OrderDetailProps) {
   const [loading, setLoading] = useState(true);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'chain' | 'qr' | 'location'>('overview');
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelNotes, setCancelNotes] = useState('');
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     if (isOpen && orderId) {
@@ -146,6 +151,48 @@ export function EnhancedOrderDetailModal({ orderId, isOpen, onClose }: OrderDeta
     } finally {
       setRefreshing(false);
     }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason.trim()) {
+      alert('Please provide a reason for cancellation');
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      await apiClient.cancelHospitalOrder(orderId, {
+        reason: cancelReason,
+        notes: cancelNotes || undefined
+      });
+
+      // Close cancel dialog
+      setShowCancelDialog(false);
+      setCancelReason('');
+      setCancelNotes('');
+
+      // Refresh order details to show updated status
+      await fetchOrderDetails();
+
+      // Notify parent component to refresh the orders list
+      if (onOrderUpdate) {
+        onOrderUpdate();
+      }
+
+      alert('Order cancelled successfully');
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel order');
+      console.error('Error cancelling order:', err);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const canCancelOrder = () => {
+    if (!orderDetails?.order) return false;
+    const status = orderDetails.order.status;
+    // Can only cancel if pending assignment, no riders available, or assigned (but not picked up)
+    return ['pending_rider_assignment', 'no_riders_available', 'assigned'].includes(status);
   };
 
   const getStatusColor = (status: string) => {
@@ -333,6 +380,18 @@ console.log('=========================');
                           <p className={`px-3 py-1 rounded-full text-sm font-medium inline-block ${getStatusColor(orderDetails.order?.status)}`}>
                             {orderDetails.order?.status?.replace(/_/g, ' ').toUpperCase()}
                           </p>
+                          {orderDetails.order?.status === 'cancelled' && orderDetails.order?.cancellation && (
+                            <span className="text-sm text-red-600">
+                              by {orderDetails.order.cancellation.cancelled_by_name}
+                              {orderDetails.order.cancellation.cancelled_by_type && (
+                                <span className="ml-1 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">
+                                  {orderDetails.order.cancellation.cancelled_by_type === 'hospital' ? 'Hospital' :
+                                   orderDetails.order.cancellation.cancelled_by_type === 'operations' ? 'Operations' :
+                                   'Collection Center'}
+                                </span>
+                              )}
+                            </span>
+                          )}
                           {(() => {
                             const now = new Date();
                             const createdAt = orderDetails.order?.created_at ? new Date(orderDetails.order.created_at) : null;
@@ -826,6 +885,45 @@ console.log('=========================');
                       })()}
                     </div>
                   </div>
+
+                  {/* Cancellation Information */}
+                  {orderDetails.order?.status === 'cancelled' && orderDetails.order?.cancellation && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <XCircle className="w-5 h-5 text-red-600" />
+                        <h3 className="font-semibold text-red-900">Order Cancelled</h3>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <label className="text-red-700 font-medium">Cancelled By:</label>
+                          <p className="text-red-900 mt-1">
+                            {orderDetails.order.cancellation.cancelled_by_name}
+                            {orderDetails.order.cancellation.cancelled_by_type && (
+                              <span className="ml-2 text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded">
+                                {orderDetails.order.cancellation.cancelled_by_type === 'hospital' ? 'Hospital' :
+                                 orderDetails.order.cancellation.cancelled_by_type === 'operations' ? 'Operations' :
+                                 'Collection Center'}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-red-700 font-medium">Reason:</label>
+                          <p className="text-red-900 mt-1">{orderDetails.order.cancellation.reason}</p>
+                        </div>
+                        {orderDetails.order.cancellation.notes && (
+                          <div>
+                            <label className="text-red-700 font-medium">Additional Notes:</label>
+                            <p className="text-red-900 mt-1">{orderDetails.order.cancellation.notes}</p>
+                          </div>
+                        )}
+                        <div>
+                          <label className="text-red-700 font-medium">Cancelled At:</label>
+                          <p className="text-red-900 mt-1">{formatDate(orderDetails.order.cancellation.cancelled_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Distance Information */}
                   {orderDetails.order?.handover_at ? (
@@ -1370,15 +1468,119 @@ console.log('=========================');
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end bg-gray-50">
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-between bg-gray-50">
+          {canCancelOrder() && (
+            <button
+              onClick={() => setShowCancelDialog(true)}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium flex items-center gap-2"
+            >
+              <XCircle size={18} />
+              Cancel Order
+            </button>
+          )}
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium ml-auto"
           >
             Close
           </button>
         </div>
       </div>
+
+      {/* Cancel Order Confirmation Dialog */}
+      {showCancelDialog && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[60]"
+          style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)'
+          }}
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <XCircle className="text-red-600" size={24} />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">Cancel Order</h3>
+              </div>
+
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to cancel order <span className="font-semibold">{orderDetails?.order?.order_number}</span>?
+                {orderDetails?.order?.rider_name && (
+                  <span className="block mt-2 text-sm">
+                    The assigned rider ({orderDetails.order.rider_name}) will be notified.
+                  </span>
+                )}
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Cancellation <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    disabled={cancelling}
+                  >
+                    <option value="">Select a reason</option>
+                    <option value="wrong_hospital_selected">Wrong Hospital Selected</option>
+                    <option value="wrong_sample_info">Wrong Sample Information</option>
+                    <option value="sample_not_ready">Sample Not Ready</option>
+                    <option value="no_longer_needed">No Longer Needed</option>
+                    <option value="duplicate_order">Duplicate Order</option>
+                    <option value="rider_taking_too_long">Rider Taking Too Long</option>
+                    <option value="technical_issue">Technical Issue</option>
+                    <option value="other">Other (Specify Below)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {cancelReason === 'other' ? (
+                      <>Custom Reason <span className="text-red-500">*</span></>
+                    ) : (
+                      'Additional Notes (Optional)'
+                    )}
+                  </label>
+                  <textarea
+                    value={cancelNotes}
+                    onChange={(e) => setCancelNotes(e.target.value)}
+                    placeholder="Any additional details..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    disabled={cancelling}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowCancelDialog(false);
+                    setCancelReason('');
+                    setCancelNotes('');
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  disabled={cancelling}
+                >
+                  Keep Order
+                </button>
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={cancelling || !cancelReason.trim() || (cancelReason === 'other' && !cancelNotes.trim())}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelling ? 'Cancelling...' : 'Confirm Cancellation'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

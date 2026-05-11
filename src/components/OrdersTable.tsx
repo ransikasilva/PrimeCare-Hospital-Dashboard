@@ -17,7 +17,7 @@ type SortDirection = 'asc' | 'desc' | null;
 export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = "All Status", sortByDate = "newest" }: OrdersTableProps = {}) {
   const searchParams = useSearchParams();
   const filters = useMemo(() => ({}), []); // Fetch all orders (no status filter)
-  const { data: ordersResponse, loading, error } = useOrders(filters);
+  const { data: ordersResponse, loading, error, refetch } = useOrders(filters);
   // State declarations
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -533,6 +533,10 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
           onClose={() => {
             setShowDetailModal(false);
             setSelectedOrderId(null);
+          }}
+          onOrderUpdate={() => {
+            // Refresh the orders list when an order is updated (e.g., cancelled)
+            refetch();
           }}
         />
       )}

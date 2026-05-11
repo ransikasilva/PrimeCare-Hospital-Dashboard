@@ -790,6 +790,14 @@ class ApiClient {
   async getSubscriptionStatus() {
     return this.request<any>('/api/hospitals/subscription-status');
   }
+
+  // Cancel hospital order
+  async cancelHospitalOrder(orderId: string, data: { reason: string; notes?: string }) {
+    return this.request<any>(`/api/hospitals/orders/${orderId}/cancel`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(API_URL);
