@@ -1429,7 +1429,8 @@ console.log('=========================');
                           },
                           status: orderDetails.order?.status || ''
                         },
-                        location_tracking: locationTracking
+                        location_tracking: locationTracking,
+                        handover: (orderDetails as any)?.handover || null
                       };
 
                       const OrderTrackingMapNew = require('@/components/OrderTrackingMapNew').default;

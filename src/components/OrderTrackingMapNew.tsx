@@ -44,6 +44,33 @@ interface OrderTrackingMapProps {
       accuracy_meters?: number;
       recorded_at: string;
     }>;
+    handover?: {
+      handover_id: string;
+      status: string;
+      reason: string;
+      location: {
+        lat: number;
+        lng: number;
+      } | null;
+      notes?: string;
+      original_rider: {
+        id: string;
+        name: string;
+        phone: string;
+      };
+      new_rider: {
+        id: string;
+        name: string;
+        phone: string;
+      } | null;
+      timeline: {
+        initiated_at: string;
+        accepted_at?: string;
+        confirmed_at?: string;
+      };
+      completed: boolean;
+      cancelled_declined: boolean;
+    } | null;
   };
   onRefresh?: () => void;
 }
@@ -270,6 +297,66 @@ export default function OrderTrackingMap({ orderDetails, onRefresh }: OrderTrack
 
     newMarkers.push(deliveryMarker);
 
+    // Check if this is a handover scenario
+    const isHandoverActive = orderDetails.handover &&
+                            orderDetails.handover.location &&
+                            ['pending', 'accepted', 'confirmed'].includes(orderDetails.handover.status);
+
+    // Add handover point marker if handover is active
+    if (isHandoverActive && orderDetails.handover?.location) {
+      const handoverMarker = new window.google.maps.Marker({
+        position: orderDetails.handover.location,
+        map: map,
+        title: 'Handover Point',
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="18" fill="#8B5CF6" stroke="#FFFFFF" stroke-width="2"/>
+              <text x="20" y="26" text-anchor="middle" fill="white" font-family="Arial" font-size="14" font-weight="bold">🤝</text>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(40, 40),
+          anchor: new window.google.maps.Point(20, 20),
+        },
+        label: {
+          text: 'HANDOVER',
+          color: '#8B5CF6',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          className: 'order-tracking-label'
+        }
+      });
+
+      const handoverInfoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div class="p-3 min-w-48">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">🤝</span>
+              <h3 class="font-bold text-gray-900">Handover Point</h3>
+            </div>
+            <div class="space-y-1 text-sm">
+              <div class="text-gray-600">
+                GPS: ${orderDetails.handover.location.lat.toFixed(6)}, ${orderDetails.handover.location.lng.toFixed(6)}
+              </div>
+              <div class="inline-block px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium capitalize">
+                ${orderDetails.handover.status}
+              </div>
+              ${orderDetails.handover.reason ? `
+                <div class="text-xs text-gray-600 mt-1">Reason: ${orderDetails.handover.reason}</div>
+              ` : ''}
+            </div>
+          </div>
+        `,
+        maxWidth: 250
+      });
+
+      handoverMarker.addListener('click', () => {
+        handoverInfoWindow.open(map, handoverMarker);
+      });
+
+      newMarkers.push(handoverMarker);
+    }
+
     // Add current rider location if available
     const latestLocation = orderDetails.location_tracking?.[0];
     if (latestLocation && orderDetails.order.rider_name) {
@@ -332,12 +419,80 @@ export default function OrderTrackingMap({ orderDetails, onRefresh }: OrderTrack
 
       newMarkers.push(riderMarker);
 
-      // Create route from current location to destination
-      if (orderDetails.order.status === 'picked_up' || orderDetails.order.status === 'delivery_started') {
-        // Route from current rider location to hospital
-        const directionsService = new window.google.maps.DirectionsService();
+      // ROUTING LOGIC BASED ON STATUS
+      const directionsService = new window.google.maps.DirectionsService();
+
+      if (orderDetails.order.status === 'handover_pending' && isHandoverActive) {
+        // Handover pending: Original rider heading to handover point
         routeRenderer.current = new window.google.maps.DirectionsRenderer({
-          suppressMarkers: true, // We have custom markers
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#8B5CF6', // Purple for handover
+            strokeWeight: 4,
+            strokeOpacity: 0.8
+          }
+        });
+
+        directionsService.route({
+          origin: latestLocation.location,
+          destination: orderDetails.handover!.location!,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        }, (result: any, status: any) => {
+          if (status === 'OK') {
+            routeRenderer.current.setDirections(result);
+            routeRenderer.current.setMap(map);
+          }
+        });
+
+      } else if (orderDetails.order.status === 'handover_accepted' && isHandoverActive) {
+        // Handover accepted: Show new rider heading to handover point
+        // (In reality, we'd need new rider's location here - for now show route from handover to hospital)
+        routeRenderer.current = new window.google.maps.DirectionsRenderer({
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#8B5CF6',
+            strokeWeight: 4,
+            strokeOpacity: 0.8
+          }
+        });
+
+        directionsService.route({
+          origin: latestLocation.location,
+          destination: orderDetails.handover!.location!,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        }, (result: any, status: any) => {
+          if (status === 'OK') {
+            routeRenderer.current.setDirections(result);
+            routeRenderer.current.setMap(map);
+          }
+        });
+
+      } else if (orderDetails.order.status === 'handover_confirmed' && isHandoverActive) {
+        // Handover confirmed: New rider heading to hospital from handover point
+        routeRenderer.current = new window.google.maps.DirectionsRenderer({
+          suppressMarkers: true,
+          polylineOptions: {
+            strokeColor: '#10B981', // Green for delivery
+            strokeWeight: 4,
+            strokeOpacity: 0.8
+          }
+        });
+
+        directionsService.route({
+          origin: latestLocation.location,
+          destination: orderDetails.order.delivery_location,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        }, (result: any, status: any) => {
+          if (status === 'OK') {
+            routeRenderer.current.setDirections(result);
+            routeRenderer.current.setMap(map);
+          }
+        });
+
+      } else if (orderDetails.order.status === 'picked_up' || orderDetails.order.status === 'delivery_started') {
+        // Normal delivery: Rider heading to hospital
+        routeRenderer.current = new window.google.maps.DirectionsRenderer({
+          suppressMarkers: true,
           polylineOptions: {
             strokeColor: '#10B981',
             strokeWeight: 4,
@@ -355,9 +510,9 @@ export default function OrderTrackingMap({ orderDetails, onRefresh }: OrderTrack
             routeRenderer.current.setMap(map);
           }
         });
+
       } else if (orderDetails.order.status === 'assigned' || orderDetails.order.status === 'pickup_started') {
-        // Route from current rider location to pickup
-        const directionsService = new window.google.maps.DirectionsService();
+        // Rider heading to pickup location
         routeRenderer.current = new window.google.maps.DirectionsRenderer({
           suppressMarkers: true,
           polylineOptions: {
@@ -482,6 +637,12 @@ export default function OrderTrackingMap({ orderDetails, onRefresh }: OrderTrack
             <div className="flex items-center space-x-1">
               <div className="w-3 h-3 rounded-full bg-green-500"></div>
               <span>Rider</span>
+            </div>
+          )}
+          {orderDetails.handover && orderDetails.handover.location && ['pending', 'accepted', 'confirmed'].includes(orderDetails.handover.status) && (
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+              <span>Handover</span>
             </div>
           )}
         </div>
