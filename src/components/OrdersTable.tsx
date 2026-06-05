@@ -417,7 +417,12 @@ export function OrdersTable({ priorityFilter = "All Priorities", statusFilter = 
                           setSelectedOrder(order);
                           setShowQRModal(true);
                         }}
-                        className="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100 transition-colors duration-200"
+                        disabled={order.status === 'cancelled'}
+                        className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${
+                          order.status === 'cancelled'
+                            ? 'text-gray-400 bg-gray-50 border border-gray-200 cursor-not-allowed opacity-50'
+                            : 'text-teal-600 bg-teal-50 border border-teal-200 hover:bg-teal-100'
+                        }`}
                       >
                         <QrCode className="w-4 h-4 mr-1" />
                         Show QR

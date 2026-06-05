@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Shield, Activity, Users } from "lucide-react";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ export default function LoginPage() {
     password: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, logout, error, clearError } = useAuth();
   const router = useRouter();
 
@@ -244,212 +246,256 @@ export default function LoginPage() {
   };
 
   return (
-    <div 
-      className="min-h-screen"
-      style={{ backgroundColor: '#F8F9FA' }}
-    >
-      <div className="w-full">
-        {/* Top Navigation Bar */}
-        <div 
-          className="bg-white border-b px-6 py-4"
-          style={{ borderColor: '#E5E7EB' }}
-        >
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center bg-white"
-                style={{ boxShadow: '0 4px 16px rgba(78, 205, 196, 0.3)' }}
-              >
-                <img src="/logo.png" alt="TransFleet Logo" className="w-8 h-8 object-contain" />
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Subtle Background Pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/30 via-white to-cyan-50/20"></div>
+
+      {/* Elegant Floating Shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-48 -right-48 w-96 h-96 bg-teal-100/40 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-cyan-100/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-teal-50/50 rounded-full blur-2xl"></div>
+      </div>
+
+      <div className="relative min-h-screen flex">
+        {/* Left Side - Branding & Features */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 p-16 flex-col justify-between text-white relative overflow-hidden">
+          {/* Elegant Pattern Overlay */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+              backgroundSize: '48px 48px'
+            }}></div>
+          </div>
+
+          {/* Soft Glow Elements */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-400/10 rounded-full blur-3xl"></div>
+
+          <div className="relative z-10">
+            {/* Logo Section */}
+            <div className="flex items-center space-x-3 mb-12">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-2xl">
+                <img src="/logo.png" alt="TransFleet" className="w-9 h-9 object-contain" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold" style={{ color: '#2C3E50' }}>
-                  TransFleet Login
-                </h1>
-                <p className="text-sm" style={{ color: '#4A5568' }}>
-                  Hospital Dashboard Access
-                </p>
+                <h1 className="text-2xl font-bold tracking-tight">TransFleet</h1>
+                <p className="text-teal-100 text-sm font-medium">Hospital Dashboard</p>
               </div>
+            </div>
+
+            {/* Hero Content */}
+            <div className="mb-10">
+              <h2 className="text-4xl font-bold leading-tight mb-4 tracking-tight">
+                Medical Sample
+                <br />
+                Delivery Excellence
+              </h2>
+              <p className="text-lg text-white/80 leading-relaxed max-w-md">
+                Streamline hospital operations with real-time tracking and intelligent delivery management.
+              </p>
+            </div>
+
+            {/* Feature Cards */}
+            <div className="space-y-3">
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all duration-300">
+                <div className="flex items-start space-x-3">
+                  <div className="w-11 h-11 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Activity className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base mb-1">Real-time Tracking</h3>
+                    <p className="text-white/70 text-sm leading-relaxed">Live GPS tracking and instant status updates</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all duration-300">
+                <div className="flex items-start space-x-3">
+                  <div className="w-11 h-11 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base mb-1">Network Management</h3>
+                    <p className="text-white/70 text-sm leading-relaxed">Manage collection centers and riders efficiently</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4 hover:bg-white/15 transition-all duration-300">
+                <div className="flex items-start space-x-3">
+                  <div className="w-11 h-11 bg-white/10 border border-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-base mb-1">Secure & Compliant</h3>
+                    <p className="text-white/70 text-sm leading-relaxed">Enterprise security with complete audit trails</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="relative z-10 flex items-center justify-between">
+            <p className="text-white/60 text-sm">
+              © 2026 TransFleet. Trusted by hospitals nationwide.
+            </p>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+              <span className="text-white/60 text-xs font-medium">All Systems Operational</span>
             </div>
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex items-center justify-center min-h-screen -mt-20">
-          <div className="max-w-2xl w-full mx-6">
-            {/* Header */}
-            <div className="text-center mb-12">
-              <h1 
-                className="font-semibold mb-4"
-                style={{ 
-                  fontSize: '42px',
-                  fontWeight: '700',
-                  color: '#2C3E50'
-                }}
-              >
-                Welcome Back
-              </h1>
-              <p 
-                style={{ 
-                  color: '#4A5568',
-                  fontSize: '20px',
-                  lineHeight: '1.6'
-                }}
-              >
-                Sign in to your hospital dashboard
-              </p>
+        {/* Right Side - Login Form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 relative z-10">
+          <div className="w-full max-w-lg">
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center justify-center space-x-3 mb-12">
+              <div className="w-14 h-14 bg-white border-2 border-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <img src="/logo.png" alt="TransFleet" className="w-10 h-10 object-contain" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">TransFleet</h1>
+                <p className="text-gray-600 text-sm font-medium">Hospital Dashboard</p>
+              </div>
             </div>
 
-            {/* Login Form */}
-            <div 
-              className="bg-white rounded-2xl p-12"
-              style={{ boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}
-            >
+            {/* Welcome Text */}
+            <div className="mb-10">
+              <h2 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">Welcome back</h2>
+              <p className="text-gray-600 text-lg">Sign in to access your hospital dashboard</p>
+            </div>
+
+            {/* Login Card */}
+            <div className="bg-white rounded-3xl shadow-2xl shadow-teal-100/50 p-10 border border-gray-100/50">
               {error && (
-                <div 
-                  className="mb-6 p-4 rounded-xl border border-red-200"
-                  style={{ backgroundColor: '#FEF2F2', color: '#DC2626' }}
-                >
-                  <p className="text-sm font-medium">{error}</p>
+                <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-red-800">{error}</p>
                 </div>
               )}
-              <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <label 
-                  htmlFor="email"
-                  className="block font-semibold mb-3"
-                  style={{ 
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: '#2C3E50'
-                  }}
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-6 py-4 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:border-teal-500"
-                  style={{ 
-                    borderColor: '#E5E7EB',
-                    backgroundColor: '#FFFFFF',
-                    color: '#2C3E50',
-                    fontSize: '16px'
-                  }}
-                  placeholder="admin@hospital.com"
-                />
-              </div>
-              <div>
-                <label 
-                  htmlFor="password"
-                  className="block font-semibold mb-3"
-                  style={{ 
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: '#2C3E50'
-                  }}
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-6 py-4 rounded-xl border-2 transition-all duration-200 focus:outline-none focus:border-teal-500"
-                  style={{ 
-                    borderColor: '#E5E7EB',
-                    backgroundColor: '#FFFFFF',
-                    color: '#2C3E50',
-                    fontSize: '16px'
-                  }}
-                  placeholder="Enter your password"
-                />
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-5 w-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                  />
-                  <label 
-                    htmlFor="remember-me" 
-                    className="ml-3"
-                    style={{ 
-                      fontSize: '16px',
-                      color: '#4A5568'
-                    }}
-                  >
-                    Remember me
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-800 mb-3">
+                    Email Address
                   </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                    </div>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all duration-200 text-gray-900 placeholder-gray-400 text-base font-medium bg-gray-50/50 focus:bg-white"
+                      placeholder="admin@hospital.com"
+                    />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPassword(true)}
-                  className="text-base hover:underline font-medium"
-                  style={{ color: '#4ECDC4' }}
-                >
-                  Forgot password?
-                </button>
-              </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-4 px-6 rounded-xl font-semibold transition-all duration-200 hover:opacity-90 disabled:opacity-50 shadow-lg"
-                style={{
-                  backgroundColor: '#4ECDC4',
-                  color: '#FFFFFF',
-                  fontSize: '18px'
-                }}
-              >
-                {isLoading ? 'Signing in...' : 'Sign In'}
-              </button>
+                {/* Password Field */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-semibold text-gray-800 mb-3">
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-teal-500 transition-colors" />
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full pl-12 pr-14 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all duration-200 text-gray-900 placeholder-gray-400 text-base font-medium bg-gray-50/50 focus:bg-white"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center hover:scale-110 transition-transform"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-teal-500 transition-colors" />
+                      ) : (
+                        <Eye className="h-5 w-5 text-gray-400 hover:text-teal-500 transition-colors" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between pt-2">
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-5 w-5 text-teal-500 focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 border-2 border-gray-300 rounded-lg cursor-pointer"
+                    />
+                    <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Remember me</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm font-semibold text-teal-600 hover:text-teal-700 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+
+                {/* Sign In Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg shadow-teal-500/30 hover:shadow-xl hover:shadow-teal-500/40 disabled:opacity-50 disabled:cursor-not-allowed group transform hover:-translate-y-0.5 mt-8"
+                >
+                  <span className="text-base">{isLoading ? 'Signing in...' : 'Sign In'}</span>
+                  {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                </button>
               </form>
             </div>
 
-            {/* Registration Link */}
-            <div className="text-center mt-10">
-              <p 
-                className="mb-6"
-                style={{ 
-                  color: '#4A5568',
-                  fontSize: '18px'
-                }}
-              >
+            {/* Register Link */}
+            <div className="mt-8 text-center">
+              <p className="text-gray-600 mb-4 font-medium">
                 Don't have an account?
               </p>
               <Link href="/register">
-                <button 
-                  className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '2px solid #4ECDC4',
-                    color: '#4ECDC4',
-                    fontSize: '16px'
-                  }}
-                >
+                <button className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-teal-500 text-teal-600 font-semibold rounded-2xl hover:bg-teal-50 hover:border-teal-600 transition-all duration-200 transform hover:-translate-y-0.5">
                   Register Your Hospital
                 </button>
               </Link>
             </div>
+
+            {/* Support Text */}
+            <p className="mt-10 text-center text-sm text-gray-500">
+              Need help? Contact us at{' '}
+              <a href="mailto:transfleet@primecare.lk" className="text-teal-600 hover:text-teal-700 font-semibold hover:underline transition-colors">
+                transfleet@primecare.lk
+              </a>
+            </p>
           </div>
         </div>
       </div>
 
       {/* Forgot Password Modal */}
       {showForgotPassword && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-8 relative">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 relative shadow-2xl animate-slideUp">
             <button
               onClick={() => {
                 setShowForgotPassword(false);
@@ -457,14 +503,14 @@ export default function LoginPage() {
                 setResetError('');
                 setResetSuccess('');
               }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            <h2 className="text-2xl font-bold mb-6" style={{ color: '#4ECDC4' }}>
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">
               Reset Password
             </h2>
 
@@ -492,13 +538,12 @@ export default function LoginPage() {
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="Email"
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
                 <button
                   type="submit"
                   disabled={resetLoading}
-                  className="w-full py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                  style={{ backgroundColor: '#4ECDC4', color: 'white' }}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 shadow-lg"
                 >
                   {resetLoading ? 'Sending...' : 'Send Code'}
                 </button>
@@ -518,13 +563,12 @@ export default function LoginPage() {
                   placeholder="6-digit code"
                   required
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-center text-2xl tracking-widest"
                 />
                 <button
                   onClick={handleVerifyOTP}
                   disabled={resetLoading || resetOTP.length !== 6}
-                  className="w-full py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                  style={{ backgroundColor: '#4ECDC4', color: 'white' }}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 shadow-lg"
                 >
                   {resetLoading ? 'Verifying...' : 'Verify Code'}
                 </button>
@@ -550,13 +594,12 @@ export default function LoginPage() {
                   placeholder="New Password (min. 6 characters)"
                   required
                   minLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
                 <button
                   onClick={handleResetPassword}
                   disabled={resetLoading || newPassword.length < 6}
-                  className="w-full py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                  style={{ backgroundColor: '#4ECDC4', color: 'white' }}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white py-3 rounded-xl font-semibold transition-all disabled:opacity-50 shadow-lg"
                 >
                   {resetLoading ? 'Resetting...' : 'Reset Password'}
                 </button>
@@ -565,6 +608,32 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
